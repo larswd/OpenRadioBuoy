@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "wio_pins")(type "KiCad")(uri "${KIPRJMOD}/wio_pins.pretty")(options "")(descr ""))
+)
