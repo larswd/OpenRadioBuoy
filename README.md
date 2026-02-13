@@ -18,9 +18,9 @@ A single OLB drifter's electronics is made up of the following components, with 
 | 1 | [DS18B20 temperature sensor](https://www.sparkfun.com/temperature-sensor-waterproof-ds18b20.html)
 | 1 | [Pololu 3.3 V Step up/Step down voltage regulator](https://www.pololu.com/product/2122) | |
 | 1 | [Saft LSH20](https://www.nkon.nl/novat/saft-lsh-20-lithium-battery-3-6v.html) | U solder tags recommended  |
-| 1 | 1.0 k$\Omega$ resistor  |
-| 1 | 4.7 k$\Omega$ resistor  |
-| 2 | 33.0 $\Omega$ resistors |
+| 1 | 1.0 kOhm resistor  |
+| 1 | 4.7 kOhm resistor  |
+| 2 | 33.0 Ohm resistors |
 | 1 | Magnetic switch         |
 | 1 | [XT30 connector](https://www.dfrobot.com/product-1762.html) | Not mandatory, but makes arming and disarming the drifter easier |
 
