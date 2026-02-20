@@ -9,11 +9,4 @@ void etl_error_func(const etl::exception& e){
   if (debug_serial){
     Serial.print(emsg);
   }
-  if ((sd_writer.active) && (sd_writer.mode == OLB_SD_WRITE_MODE)){
-    sd_writer.closeLog();
-  }
-  sd_writer.startLogging("ETL_errors.txt");
-  sd_writer.logString(emsg);
-  sd_writer.closeLog();
-
 }

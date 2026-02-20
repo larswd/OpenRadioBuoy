@@ -6,7 +6,6 @@
 #define ETL_LOG_ERRORS 1
 #define ETL_CHECK_PUSH_POP
 
-#include "sd_writer.h"
 #include "etl/vector.h"
 
 void etl_error_func(const etl::exception& e);

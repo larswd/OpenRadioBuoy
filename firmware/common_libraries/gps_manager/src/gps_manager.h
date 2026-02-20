@@ -9,7 +9,6 @@
 #include "etl/deque.h"
 #include "etl/vector.h"
 #include "etl/string.h"
-#include "stats.h"
 #include "IWatchdog.h"
 #include "TimeLib.h"
 
