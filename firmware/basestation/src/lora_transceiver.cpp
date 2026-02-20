@@ -62,9 +62,9 @@ void LoRa_Transceiver::sendFinalMessage(FrequencyMessage frequency_message)
 {
   byte msg[15];
   uint32_t msgSize = create_update_message(msg, frequency_message);
-  SD_CARD.debugSerialPrint("Sending end message ");
-  SD_CARD.debugByteArray(msg, msgSize);
-  SD_CARD.debugSerialPrintln("");
+  sd_writer.debugSerialPrint("Sending end message ");
+  sd_writer.debugByteArray(msg, msgSize);
+  sd_writer.debugSerialPrintln("");
 
   changeFrequency(LoRa_freq_send);
   radio.startTransmit(msg, msgSize);
@@ -207,8 +207,7 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
   // Start radio in listen mode and wait for response
   uint32_t startLooking = millis();
   LoRa_freq_receive = (float) ((float) freq/ (float) scale_factor);
-  // SD_CARD.debugSerialPrint("LoRa_freq_receive: ");
-  // SD_CARD.debugSerialPrintln(LoRa_freq_receive);
+
   changeFrequency(LoRa_freq_receive);
   // listen(max_wait_time);
   IWatchdog.reload();
@@ -221,14 +220,14 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
 
     // sscanf(string_buoy_msg.msg.c_str(), "%s %d", buoy_ID, &baseStationID2);
     // Serial.println(string_buoy_msg.msg);
-    SD_CARD.debugSerialPrint("Bouy ID : ");
-    SD_CARD.debugSerialPrint(buoy_id_message.buoy_id);
-    SD_CARD.debugSerialPrint(", ");
+    sd_writer.debugSerialPrint("Bouy ID : ");
+    sd_writer.debugSerialPrint(buoy_id_message.buoy_id);
+    sd_writer.debugSerialPrint(", ");
 
 
-    SD_CARD.debugSerialPrint("Base station ID : ");
-    SD_CARD.debugSerialPrint(buoy_id_message.base_station_ID);
-    SD_CARD.debugSerialPrintln("");
+    sd_writer.debugSerialPrint("Base station ID : ");
+    sd_writer.debugSerialPrint(buoy_id_message.base_station_ID);
+    sd_writer.debugSerialPrintln("");
   }
   // Serial.print(baseStationID);
   // Serial.print(" Received: ");
@@ -247,7 +246,7 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
   // If no response, exit
   if (!buoy.inrange)
   {
-    SD_CARD.debugSerialPrintln("No buoy found");
+    sd_writer.debugSerialPrintln("No buoy found");
     buoy.ID = 0;
     return buoy;
   }
@@ -260,12 +259,12 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
 
     byte final_handshake_msg[1 + sizeof(buoy.ID) + sizeof(base_station_ID) + sizeof(listen_time) + 1];
     final_handshake_msg[0] = 'B';
-    SD_CARD.debugSerialPrintln("sending last message");
+    sd_writer.debugSerialPrintln("sending last message");
     msg_insert_uint(final_handshake_msg, buoy.ID, 1, sizeof(final_handshake_msg), true);
     final_handshake_msg[1 +sizeof(buoy.ID)] = base_station_ID;
     msg_insert_uint(final_handshake_msg, listen_time, 1 + sizeof(buoy.ID) + sizeof(base_station_ID), sizeof(final_handshake_msg), true);
 
-    SD_CARD.debugSerialPrintln("sending last message now");
+    sd_writer.debugSerialPrintln("sending last message now");
     final_handshake_msg[14] = 'E';
 
 
@@ -286,7 +285,7 @@ void LoRa_Transceiver::waitUntilReady()
   uint32_t start_wait = millis();
   if (debug_serial)
   {
-    SD_CARD.debugSerialPrintln("Waiting for successful sending");
+    sd_writer.debugSerialPrintln("Waiting for successful sending");
   }
   while (!operationDone)
   {

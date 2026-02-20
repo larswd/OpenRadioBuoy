@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "lora_transceiver.h"
 #include "message_parser.h"
+#include "etl_error_manager.h"
 #include "sd_writer.h"
 #include "gsm.h"
 #include "IWatchdog.h"
@@ -27,14 +28,14 @@ void setup()
   Serial.print("setup of base station: ");
   Serial.println(base_station_ID);
 
-  SD_CARD.setup();
-  // if (!SD_CARD.getStatus())
+  sd_writer.begin();
+  // if (!sd_writer.getStatus())
   // {
   //   Serial.println("SD opened");
   // }
-  SD_CARD.startLogging("boot_info.txt");
-  SD_CARD.logString("Booting base station");
-  SD_CARD.closeLog();
+  sd_writer.startLogging("boot_info.txt");
+  sd_writer.logString("Booting base station");
+  sd_writer.closeLog();
 
   // if (sd_closed)
   // {
@@ -66,43 +67,43 @@ void loop()
   // reset Notecard
   if ((millis() - notecard_reset_start) > reset_frequency)
   {
-    SD_CARD.startDebugging(DEBUG_MODE_NOTECARD_RESET);
+    sd_writer.startDebugging(DEBUG_MODE_NOTECARD_RESET);
     IWatchdog.reload();
-    SD_CARD.debugSerialPrintln("Reset notecard");
+    sd_writer.debugSerialPrintln("Reset notecard");
     //GSM.reset();
     //GSM.sendMessage("Notecard has been reset.");
     //GSM.syncMessages(false);
     notecard_reset_start = millis();
-    SD_CARD.closeDebug();
+    sd_writer.closeDebug();
   }
 
   // BST heartbeat message
   if ((millis() - health_time_start) > health_frequency)
   {
-    SD_CARD.startDebugging(DEBUG_MODE_BST_HEARTBEAT);
+    sd_writer.startDebugging(DEBUG_MODE_BST_HEARTBEAT);
     IWatchdog.reload();
-    SD_CARD.debugSerialPrintln("send health msg to notehub");
+    sd_writer.debugSerialPrintln("send health msg to notehub");
     //GSM.sendMessage("BST is up and running");
     //GSM.syncMessages(false);
     health_time_start = millis();
-    SD_CARD.closeDebug();
+    sd_writer.closeDebug();
   }
 
   if (((millis() - notecard_input_sync_start) > (input_sync_frequency * 60 * 1000)))
   {
     if (get_frequency_from_notehub)
     {
-          SD_CARD.startDebugging(DEBUG_MODE_NOTEHUB_SYNC);
+          sd_writer.startDebugging(DEBUG_MODE_NOTEHUB_SYNC);
           IWatchdog.reload();
-          SD_CARD.debugSerialPrintln("Receive measurement frequency:");
+          sd_writer.debugSerialPrintln("Receive measurement frequency:");
           //GSM.syncMessages(true);
           //adaptive_frequency_msg = GSM.receiveMeasurementFrequency();
-          SD_CARD.closeDebug();
+          sd_writer.closeDebug();
     }
     if (enable_rescue_from_notehub) 
     {
-      SD_CARD.startDebugging(DEBUG_MODE_NOTEHUB_SYNC);
-      SD_CARD.debugSerialPrintln("Receive rescue parameter:");
+      sd_writer.startDebugging(DEBUG_MODE_NOTEHUB_SYNC);
+      sd_writer.debugSerialPrintln("Receive rescue parameter:");
       //GSM.syncMessages(true);
       BeaconIncomingMessage beacon_message = GSM.receiveBeaconMessage(rescue_mode, rescue_timeout);
       // only start timing if rescue mode has been enabled now
@@ -112,7 +113,7 @@ void loop()
       }
       rescue_mode = beacon_message.enable_rescue_mode;
       rescue_timeout = beacon_message.timeout_rescue_mode;
-      SD_CARD.closeDebug();
+      sd_writer.closeDebug();
     }
 
     notecard_input_sync_start = millis();
@@ -121,7 +122,7 @@ void loop()
 
   if (rescue_mode) 
   {
-    SD_CARD.startDebugging(DEBUG_MODE_BUOY_RESCUE);
+    sd_writer.startDebugging(DEBUG_MODE_BUOY_RESCUE);
      if ((millis() - notecard_rescue_mode_start) < rescue_timeout) 
      {
       IWatchdog.reload();
@@ -132,39 +133,39 @@ void loop()
       std::queue<BeaconOutgoingMessage *> beaconMessageQueue;
       while ((millis() - startListen) < (listen_time + listen_time_delta))
       {
-        SD_CARD.debugSerialPrint("Remaining listening time: ");
-        SD_CARD.debugSerialPrintln((listen_time + listen_time_delta) - (millis() - startListen));
+        sd_writer.debugSerialPrint("Remaining listening time: ");
+        sd_writer.debugSerialPrintln((listen_time + listen_time_delta) - (millis() - startListen));
 
 
         LORA.listenByteArray(10000);
         if (LORA.byte_buoy_msg.success)
         {
 
-          SD_CARD.debugSerialPrint("Receiving message: ");
-          SD_CARD.debugSerialPrintln((char)LORA.byte_buoy_msg.byteMsg[0]);
+          sd_writer.debugSerialPrint("Receiving message: ");
+          sd_writer.debugSerialPrintln((char)LORA.byte_buoy_msg.byteMsg[0]);
 
-          SD_CARD.debugSerialPrint("Received message bytes: ");
-          SD_CARD.debugByteArray(LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
-          SD_CARD.debugSerialPrintln("");
+          sd_writer.debugSerialPrint("Received message bytes: ");
+          sd_writer.debugByteArray(LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
+          sd_writer.debugSerialPrintln("");
           
 
-          SD_CARD.debugSerialPrint("RSSI:\t\t");
+          sd_writer.debugSerialPrint("RSSI:\t\t");
           float rssi = LORA.getRSSI();
-          SD_CARD.debugSerialPrintln(rssi);
+          sd_writer.debugSerialPrintln(rssi);
 
           if (LORA.byte_buoy_msg.byteMsg[0] == 'U' && LORA.byte_buoy_msg.byteMsg[1] == 'R')
           {
 
-            SD_CARD.debugSerialPrint("Received beacon message");
+            sd_writer.debugSerialPrint("Received beacon message");
             beacon_Reading b = MESSAGE_PARSER.parse_beacon_message(LORA.byte_buoy_msg.byteMsg);
-            SD_CARD.debugSerialPrint("timestamp: ");
-            SD_CARD.debugSerialPrint(b.timestamp);
-            SD_CARD.debugSerialPrint(", lat: ");
-            SD_CARD.debugSerialPrint(b.lat);
-            SD_CARD.debugSerialPrint(", lng: ");
-            SD_CARD.debugSerialPrint(b.lng);
-            SD_CARD.debugSerialPrint(", bouy ID: ");
-            SD_CARD.debugSerialPrintln(b.buoy_id);
+            sd_writer.debugSerialPrint("timestamp: ");
+            sd_writer.debugSerialPrint(b.timestamp);
+            sd_writer.debugSerialPrint(", lat: ");
+            sd_writer.debugSerialPrint(b.lat);
+            sd_writer.debugSerialPrint(", lng: ");
+            sd_writer.debugSerialPrint(b.lng);
+            sd_writer.debugSerialPrint(", bouy ID: ");
+            sd_writer.debugSerialPrintln(b.buoy_id);
             BeaconOutgoingMessage *beaconMsg = new BeaconOutgoingMessage;
             beaconMsg->buoy_id = b.buoy_id;
             beaconMsg->lat = b.lat;
@@ -178,7 +179,7 @@ void loop()
       IWatchdog.reload();
       while (!beaconMessageQueue.empty())
       {
-        SD_CARD.debugSerialPrintln("Send messages to Notehub");
+        sd_writer.debugSerialPrintln("Send messages to Notehub");
         BeaconOutgoingMessage *beaconMsg = beaconMessageQueue.front();
         beaconMessageQueue.pop();
         //GSM.sendBeaconMessage(beaconMsg);
@@ -190,16 +191,16 @@ void loop()
      {
       rescue_mode = false;
      }
-     SD_CARD.closeDebug();
+     sd_writer.closeDebug();
 
   }
   else if (enable_handshake)
   {
-    SD_CARD.startDebugging(DEBUG_MODE_BUOY_COMM);
+    sd_writer.startDebugging(DEBUG_MODE_BUOY_COMM);
     IWatchdog.reload();
-    SD_CARD.debugSerialPrintln("handshake enabled");
+    sd_writer.debugSerialPrintln("handshake enabled");
     buoyInfo buoy = LORA.findBuoy(max_radio_fix_look_time);
-     SD_CARD.debugSerialPrintln("still after searching for buoy");
+     sd_writer.debugSerialPrintln("still after searching for buoy");
 
     // GSM.sendMessage("loop in main");
     if (buoy.inrange)
@@ -210,17 +211,17 @@ void loop()
       uint32_t startListen = millis();
 
       // IWatchdog.reload();
-      SD_CARD.debugSerialPrintln("Write to SD card");
+      sd_writer.debugSerialPrintln("Write to SD card");
       char filename[32];
-      // sprintf(filename, "transmissions/packet_%020d.txt", SD_CARD.transmissionsCount); // TODO: Change to date queried from notehub
-      bool SD_fail = SD_CARD.setup();
-      // SD_CARD.startLogging(filename);
+      // sprintf(filename, "transmissions/packet_%020d.txt", sd_writer.transmissionsCount); // TODO: Change to date queried from notehub
+      bool SD_fail = sd_writer.begin();
+      // sd_writer.startLogging(filename);
 
       if (!SD_fail)
       {
-        SD_CARD.debugSerialPrintln("SD opened");
-        // SD_CARD.debugSerialPrint("Status code: ");
-        // SD_CARD.debugSerialPrintln(status);
+        sd_writer.debugSerialPrintln("SD opened");
+        // sd_writer.debugSerialPrint("Status code: ");
+        // sd_writer.debugSerialPrintln(status);
       }
 
       std::queue<BuoyMessage *> messageQueue;
@@ -229,25 +230,25 @@ void loop()
 
       while ((millis() - startListen) < (listen_time + listen_time_delta))
       {
-        SD_CARD.debugSerialPrint("Remaining listening time: ");
-        SD_CARD.debugSerialPrintln((listen_time + listen_time_delta) - (millis() - startListen));
+        sd_writer.debugSerialPrint("Remaining listening time: ");
+        sd_writer.debugSerialPrintln((listen_time + listen_time_delta) - (millis() - startListen));
         // LORA.listenByteArray((listen_time + listen_time_delta) - (millis() - startListen));
         
         // This should probably be a variable
         LORA.listenByteArray(10000);
         if (LORA.byte_buoy_msg.success)
         {
-          SD_CARD.debugSerialPrint("Receiving message: ");
-          SD_CARD.debugSerialPrintln((char)LORA.byte_buoy_msg.byteMsg[0]);
+          sd_writer.debugSerialPrint("Receiving message: ");
+          sd_writer.debugSerialPrintln((char)LORA.byte_buoy_msg.byteMsg[0]);
 
-          SD_CARD.debugSerialPrint("Received message bytes: ");
-          SD_CARD.debugByteArray(LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
-          SD_CARD.debugSerialPrintln("");
+          sd_writer.debugSerialPrint("Received message bytes: ");
+          sd_writer.debugByteArray(LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
+          sd_writer.debugSerialPrintln("");
           
 
-          SD_CARD.debugSerialPrint("RSSI:\t\t");
+          sd_writer.debugSerialPrint("RSSI:\t\t");
           float rssi = LORA.getRSSI();
-          SD_CARD.debugSerialPrintln(rssi);
+          sd_writer.debugSerialPrintln(rssi);
 
           if (LORA.byte_buoy_msg.byteMsg[0] == 'G')
           {
@@ -261,20 +262,20 @@ void loop()
             messageQueue.push(qMsg);
 
             // GSM.sendMessage("location info");
-            SD_CARD.debugSerialPrintln("location info");
+            sd_writer.debugSerialPrintln("location info");
             GPS_Reading g = MESSAGE_PARSER.parse_gps_message(LORA.byte_buoy_msg.byteMsg);
-            SD_CARD.debugSerialPrint("reading id: ");
-            SD_CARD.debugSerialPrint(g.reading_ID);
-            SD_CARD.debugSerialPrint(", lat: ");
-            SD_CARD.debugSerialPrint(g.lat);
-            SD_CARD.debugSerialPrint(", lng: ");
-            SD_CARD.debugSerialPrint(g.lng);
-            SD_CARD.debugSerialPrint(", vel: ");
-            SD_CARD.debugSerialPrint(g.vel);
-            SD_CARD.debugSerialPrint(", direction: ");
-            SD_CARD.debugSerialPrint(g.direction);
-            SD_CARD.debugSerialPrint(", timestamp: ");
-            SD_CARD.debugSerialPrintln(g.timestamp);
+            sd_writer.debugSerialPrint("reading id: ");
+            sd_writer.debugSerialPrint(g.reading_ID);
+            sd_writer.debugSerialPrint(", lat: ");
+            sd_writer.debugSerialPrint(g.lat);
+            sd_writer.debugSerialPrint(", lng: ");
+            sd_writer.debugSerialPrint(g.lng);
+            sd_writer.debugSerialPrint(", vel: ");
+            sd_writer.debugSerialPrint(g.vel);
+            sd_writer.debugSerialPrint(", direction: ");
+            sd_writer.debugSerialPrint(g.direction);
+            sd_writer.debugSerialPrint(", timestamp: ");
+            sd_writer.debugSerialPrintln(g.timestamp);
           }
           else if (LORA.byte_buoy_msg.byteMsg[0] == 'T')
           {
@@ -294,21 +295,21 @@ void loop()
             memcpy(qMsg->byteMsg->byteMsg, LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
             messageQueue.push(qMsg);
 
-            SD_CARD.debugSerialPrintln("temperature info");
+            sd_writer.debugSerialPrintln("temperature info");
             // Receive temperature message
             temperature_Reading c = MESSAGE_PARSER.parse_temperature_message(LORA.byte_buoy_msg.byteMsg);
-            SD_CARD.debugSerialPrint("reading id: ");
-            SD_CARD.debugSerialPrint(c.reading_ID);
-            SD_CARD.debugSerialPrint(", ");
+            sd_writer.debugSerialPrint("reading id: ");
+            sd_writer.debugSerialPrint(c.reading_ID);
+            sd_writer.debugSerialPrint(", ");
             for (int i = 0; i < max_thermometer; i++){
-              SD_CARD.debugSerialPrint("temperature sensor ");
-              SD_CARD.debugSerialPrint(i);
-              SD_CARD.debugSerialPrint(": ");
-              SD_CARD.debugSerialPrint(c.temps[i]);
-              SD_CARD.debugSerialPrint(", ");
+              sd_writer.debugSerialPrint("temperature sensor ");
+              sd_writer.debugSerialPrint(i);
+              sd_writer.debugSerialPrint(": ");
+              sd_writer.debugSerialPrint(c.temps[i]);
+              sd_writer.debugSerialPrint(", ");
             }
-            SD_CARD.debugSerialPrint(", timestamp: ");
-            SD_CARD.debugSerialPrintln(c.timestamp);
+            sd_writer.debugSerialPrint(", timestamp: ");
+            sd_writer.debugSerialPrintln(c.timestamp);
           }
           else if (LORA.byte_buoy_msg.byteMsg[0] == 'R')
           {
@@ -319,19 +320,19 @@ void loop()
           }
           else if (LORA.byte_buoy_msg.byteMsg[0] == 'E' && LORA.byte_buoy_msg.byteMsg[1] == 'M')
           {
-            SD_CARD.debugSerialPrintln("end message");
+            sd_writer.debugSerialPrintln("end message");
 
             buoyInfoReading b = MESSAGE_PARSER.parse_buoy_info_message(LORA.byte_buoy_msg.byteMsg);
 
-            SD_CARD.debugSerialPrint("Sent packets: ");
-            SD_CARD.debugSerialPrint(b.sent_packets);
-            SD_CARD.debugSerialPrint(", left packets: ");
-            SD_CARD.debugSerialPrint(b.left_packets);
-            SD_CARD.debugSerialPrint(", listen time: ");
-            SD_CARD.debugSerialPrint(b.listen_time);
-            SD_CARD.debugSerialPrint(", crashed: ");
-            SD_CARD.debugSerialPrintln(b.crashed);
-            SD_CARD.debugSerialPrintln("End of message");
+            sd_writer.debugSerialPrint("Sent packets: ");
+            sd_writer.debugSerialPrint(b.sent_packets);
+            sd_writer.debugSerialPrint(", left packets: ");
+            sd_writer.debugSerialPrint(b.left_packets);
+            sd_writer.debugSerialPrint(", listen time: ");
+            sd_writer.debugSerialPrint(b.listen_time);
+            sd_writer.debugSerialPrint(", crashed: ");
+            sd_writer.debugSerialPrintln(b.crashed);
+            sd_writer.debugSerialPrintln("End of message");
             LORA.sendFinalMessage(adaptive_frequency_msg);
             // delay(100);
 
@@ -342,7 +343,7 @@ void loop()
             // GSM.syncMessages();
             break;
           }
-          SD_CARD.debugSerialPrintln("");
+          sd_writer.debugSerialPrintln("");
         }
       }
 
@@ -354,13 +355,13 @@ void loop()
         Serial.println("Create file on SD card");
         char filename[32];
         sprintf(filename, "transmissions/packet_%020d.txt", time);
-        SD_CARD.startLogging(filename);
+        sd_writer.startLogging(filename);
       }
 
       while (!messageQueue.empty())
       {
         IWatchdog.reload();
-        SD_CARD.debugSerialPrintln("Sending all queued messages via GSM...");
+        sd_writer.debugSerialPrintln("Sending all queued messages via GSM...");
         BuoyMessage *qMsg = messageQueue.front();
         messageQueue.pop();
 
@@ -371,12 +372,12 @@ void loop()
 
         if (SD_fail == 0)
         {
-          SD_CARD.logByteArray(qMsg->byteMsg->byteMsg, qMsg->byteMsg->numBytes);
-          // SD_CARD.logString((char*)LORA.byte_buoy_msg.byteMsg);
+          sd_writer.logByteArray(qMsg->byteMsg->byteMsg, qMsg->byteMsg->numBytes);
+          // sd_writer.logString((char*)LORA.byte_buoy_msg.byteMsg);
         }
         else
         {
-          SD_CARD.debugSerialPrintln("SD card failed to open");
+          sd_writer.debugSerialPrintln("SD card failed to open");
         }
 
         //GSM.sendBuoyMessage(qMsg, buoy_ID);
@@ -388,8 +389,8 @@ void loop()
       // notecard_reset_start = millis();
       IWatchdog.reload();
       //GSM.syncMessages(false);
-      SD_CARD.closeLog();
-      SD_CARD.closeDebug();
+      sd_writer.closeLog();
+      sd_writer.closeDebug();
       // buoy = LORA.initEmptyBuoy();
     }
   }

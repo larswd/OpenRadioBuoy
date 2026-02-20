@@ -50,7 +50,7 @@ void setup() {
   */
 
   // Start SD
-  bool SD_fail = sd_writer.begin(PB9, true);  
+  bool SD_fail = sd_writer.begin();  
   int8_t status = sd_writer.startLogging("boot_info.txt");
   if (!SD_fail && debug_serial){
     Serial.println("SD opened");
@@ -160,7 +160,7 @@ void setup() {
   */ 
   LowPower.begin();
   gps_manager.shutdownGPS();
-  sd_writer.stopLogging();
+  sd_writer.closeLog();
   thermo_manager.sleep();
   if (debug_LED_enabled){
     digitalWrite(LED_BUILTIN, LOW);
@@ -175,7 +175,7 @@ void setup() {
   //sd_writer.readFile();
   //gps_manager.getMeasurementFromFile();
   //thermo_manager.getMeasurementFromFile();
-  //sd_writer.stopReading();
+  //sd_writer.closeRead();
 
 
   if (debug_serial){
@@ -215,7 +215,7 @@ void loop() {
     sprintf(logname, "readings/reading%05d.txt", sd_writer.logCount);
     
     if (!sd_writer.active){
-      sd_writer.begin(PB9, false);
+      sd_writer.begin();
     }
     sd_writer.startLogging(logname);
     IWatchdog.reload();
@@ -253,7 +253,7 @@ void loop() {
     sleep_cycles_measurement = 0;
     measurement_timer = millis_time_corrected(sleep_cycles_measurement);
     thermo_manager.sleep();
-    sd_writer.stopLogging();
+    sd_writer.closeLog();
     IWatchdog.reload();
   }
   
@@ -276,7 +276,7 @@ void loop() {
     sprintf(logname, "messages/transmission%05d.txt", LORA.msgCounter);
 
     if (!sd_writer.active){
-      sd_writer.begin(PB9, false);
+      sd_writer.begin();
     }
 
     sd_writer.startLogging(logname);
@@ -354,7 +354,7 @@ void loop() {
       Serial.println("Transmission done");
     }
     sd_writer.logString("Transmission done");
-    sd_writer.stopLogging();
+    sd_writer.closeLog();
 
     sleep_cycles_transmission = 0;
     measurement_timer = millis();

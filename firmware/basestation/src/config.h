@@ -2,6 +2,11 @@
 #define CONFIG_H
 #include "Arduino.h"
 
+static constexpr uint8_t BUOY_MODE {0};
+static constexpr uint8_t BST_MODE {1};
+
+static constexpr uint8_t WIO_MODE {BST_MODE}; 
+
 // Base station parameters
 static constexpr uint8_t base_station_ID            {25};
 static constexpr int max_message_length             {64};

@@ -50,8 +50,8 @@ void GSM_module::init_aux()
     const char *err = JGetString(rsp, "err");
     if (err != "")
     {
-        SD_CARD.debugSerialPrint("Error: ");
-        SD_CARD.debugSerialPrintln(err);
+        sd_writer.debugSerialPrint("Error: ");
+        sd_writer.debugSerialPrintln(err);
     }
 }
 
@@ -74,14 +74,14 @@ FrequencyMessage GSM_module::receiveMeasurementFrequency()
    
 
     // TODO: replace by note.get, see https://dev.blues.io/notecard/notecard-walkthrough/inbound-requests-and-shared-data/
-    SD_CARD.debugSerialPrintln("Receive measurement frequency function");
+    sd_writer.debugSerialPrintln("Receive measurement frequency function");
     J *req = NoteNewRequest("note.get");
     JAddStringToObject(req, "file", "setup.qi");
     JAddBoolToObject(req, "delete", true);
     J *rsp = NoteRequestResponse(req);
     if (notecard.responseError(rsp))
     {
-        SD_CARD.debugSerialPrintln("No notes available");
+        sd_writer.debugSerialPrintln("No notes available");
     }
     else
     {
@@ -90,14 +90,14 @@ FrequencyMessage GSM_module::receiveMeasurementFrequency()
         frequency_msg.target_length = JGetInt(body, "target_length");
         frequency_msg.threshold_velocity = JGetInt(body, "threshold_velocity");
         frequency_msg.adaptive_frequency = JGetBool(body, "adaptive_frequency");
-        SD_CARD.debugSerialPrint("Measurement frequency: ");
-        SD_CARD.debugSerialPrintln(frequency_msg.measurement_frequency);
-        SD_CARD.debugSerialPrint("Target length: ");
-        SD_CARD.debugSerialPrintln(frequency_msg.target_length);
-        SD_CARD.debugSerialPrint("Threshold velocity: ");
-        SD_CARD.debugSerialPrintln(frequency_msg.threshold_velocity);
-        SD_CARD.debugSerialPrint("Adaptive frequency enabled: ");
-        SD_CARD.debugSerialPrintln(frequency_msg.adaptive_frequency);
+        sd_writer.debugSerialPrint("Measurement frequency: ");
+        sd_writer.debugSerialPrintln(frequency_msg.measurement_frequency);
+        sd_writer.debugSerialPrint("Target length: ");
+        sd_writer.debugSerialPrintln(frequency_msg.target_length);
+        sd_writer.debugSerialPrint("Threshold velocity: ");
+        sd_writer.debugSerialPrintln(frequency_msg.threshold_velocity);
+        sd_writer.debugSerialPrint("Adaptive frequency enabled: ");
+        sd_writer.debugSerialPrintln(frequency_msg.adaptive_frequency);
 
     }
     notecard.deleteResponse(rsp);
@@ -130,8 +130,8 @@ void GSM_module::sendBuoyMessage(BuoyMessage *msg, uint32_t buoy_id)
         const char *err = JGetString(rsp, "err");
         if (err != "")
         {
-            SD_CARD.debugSerialPrint("Error in notecard communication: ");
-            SD_CARD.debugSerialPrintln(err);
+            sd_writer.debugSerialPrint("Error in notecard communication: ");
+            sd_writer.debugSerialPrintln(err);
             reset();
         }
     }
@@ -152,7 +152,7 @@ void GSM_module::sendMessage(const char *msg)
         bool success = notecard.sendRequest(req);
         if (!success)
         {
-            SD_CARD.debugSerialPrintln("Error on notecard communication");
+            sd_writer.debugSerialPrintln("Error on notecard communication");
             reset();
         }
     }
@@ -167,7 +167,7 @@ void GSM_module::syncMessages(boolean sync_input)
 
 BeaconIncomingMessage GSM_module::receiveBeaconMessage(bool rescue_mode, time_t timeout)
 {
-    SD_CARD.debugSerialPrintln("Receive beacon rescue function");
+    sd_writer.debugSerialPrintln("Receive beacon rescue function");
     BeaconIncomingMessage beacon_message = {rescue_mode, timeout};
     J *req = NoteNewRequest("note.get");
     JAddStringToObject(req, "file", "beacon.qi");
@@ -175,7 +175,7 @@ BeaconIncomingMessage GSM_module::receiveBeaconMessage(bool rescue_mode, time_t 
     J *rsp = NoteRequestResponse(req);
     if (notecard.responseError(rsp))
     {
-        SD_CARD.debugSerialPrintln("No notes available");
+        sd_writer.debugSerialPrintln("No notes available");
     }
     else
     {
@@ -184,14 +184,14 @@ BeaconIncomingMessage GSM_module::receiveBeaconMessage(bool rescue_mode, time_t 
         beacon_message.timeout_rescue_mode = JGetInt(body, "timeout");
         if (beacon_message.enable_rescue_mode)
         {
-            SD_CARD.debugSerialPrintln("Rescue mode enabled");
+            sd_writer.debugSerialPrintln("Rescue mode enabled");
         } 
         else 
         {
-            SD_CARD.debugSerialPrintln("Rescue mode disabled");
+            sd_writer.debugSerialPrintln("Rescue mode disabled");
         }
-        SD_CARD.debugSerialPrint("Timeout for rescue mode: ");
-        SD_CARD.debugSerialPrintln(beacon_message.timeout_rescue_mode);
+        sd_writer.debugSerialPrint("Timeout for rescue mode: ");
+        sd_writer.debugSerialPrintln(beacon_message.timeout_rescue_mode);
     }
 
     return beacon_message;
@@ -220,8 +220,8 @@ void GSM_module::sendBeaconMessage(BeaconOutgoingMessage* msg)
         const char *err = JGetString(rsp, "err");
         if (err != "")
         {
-            SD_CARD.debugSerialPrint("Error in notecard communication: ");
-            SD_CARD.debugSerialPrintln(err);
+            sd_writer.debugSerialPrint("Error in notecard communication: ");
+            sd_writer.debugSerialPrintln(err);
             reset();
         }
     }

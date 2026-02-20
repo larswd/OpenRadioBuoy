@@ -37,13 +37,20 @@ struct fileLine{
   uint8_t length;
 };
 
-class SD_Writer{
+class SDWriter{
   public:
+    // Boot SD card
     bool begin();
+
+    // Open files
     int8_t startLogging(String filename);
     int8_t startLogging(const char * filename);
     int8_t startReading(String filename);
     int8_t startReading(const char * filename);
+    int8_t startDebugging(int MODE);
+    bool debugOpened = false;
+
+    // File manipulation
     int8_t logString(String msg);
     int8_t logString(const char * msg);
     int8_t logString(const byte * msg, const uint8_t messageSize);
@@ -51,23 +58,41 @@ class SD_Writer{
     int8_t logSignalInfo(uint32_t RSSI, uint32_t SNR);
     int8_t readFile(void);
     int8_t printFileToSerial(void);
-    int8_t stopLogging(void);
-    int8_t stopReading(void);
-    int8_t shutdown(void);
     int8_t deleteFile(const char * filename);
+ 
+    // Shutdown and stop functions
+    int8_t closeLog(void);
+    int8_t closeRead(void);
+    int8_t shutdown(void);
+
+    // Flag checking if SD writer already is in use
     bool active = false;
+    
+    // File counts
     uint16_t logCount = 0;
+    uint32_t transmissionsCount = 0;
+    uint32_t debugInfoLogCount[4]  = {0,0,0,0};
+
+    // File reading utilities
     uint16_t numLines = 0;
     etl::deque<fileLine, max_file_length> file_buffer;
     
+    // Debugging tools
+    void debugSerialPrint(const char * line);
+    void debugSerialPrint(float number);
+    void debugSerialPrintln(const char * line);
+    void debugSerialPrintln(float number);
+    int8_t debugByteArray(byte * array, int length);
+    void closeDebug(void);
+    uint8_t mode = OLB_SD_INACTIVE;
   private:
     bool SD_fail;
-    uint8_t mode = OLB_SD_INACTIVE;
     File LogFile;
+    File debugFile;
     SdFat SD;
     fileLine line;
-    uint16_t countFilesInDirectory(const char * dirName);
+    uint32_t countFilesInDirectory(const char * dirName);
 };
 
-extern SD_Writer sd_writer;
+extern SDWriter sd_writer;
 #endif
