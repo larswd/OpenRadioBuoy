@@ -1,4 +1,7 @@
-#include "SD_writer.h"
+#include "sd_writer.h"
+
+
+SD_Writer sd_writer;
 
 /*
   Initialising SD_writer, and file opening functions. 
@@ -10,35 +13,36 @@
     2 - User tries to either open an already opened file, or 
         write to nonexisting file
 */
-uint16_t SD_Writer::countFiles(const char * directory){
+
+uint16_t SD_Writer::countFilesInDirectory(const char * dirName){
   // Reads all files in given directory
   uint16_t fileCount = 0;
-  File readingDir;
-  readingDir.open(directory);
-  while (LogFile.openNext(&readingDir, O_RDONLY)) {
+  File directory;
+  directory.open(dirName);
+  while (LogFile.openNext(&directory, O_RDONLY)) {
     if (!LogFile.isHidden()) {
       fileCount++;
     }
-    LogFile.close();
   }
-  readingDir.close();
+  LogFile.close();
+  directory.close();
   return fileCount;
 }
 
-bool SD_Writer::begin(int8_t cs_pin, bool countLogFiles = false){
+bool SD_Writer::begin(void){
   /*
     Start up the SD writer. Returns 0 if everything works as intended. 
   */
 
-  SD_fail = !SD.begin(cs_pin);
+  SD_fail = !SD.begin(SD_CS_PIN);
  
   if (!SD_fail){
     active = true;
 
     // We create the necessary directories if not already present
-    if (!SD.exists("readings")){
+    if (!SD.exists("readings") && (WIO_MODE == BUOY)){
       SD.mkdir("readings");
-    } else if (SD.exists("readings") && countLogFiles) {
+    } else if (SD.exists("readings")) {
       //If readings directory is present, we count 
       // the files in said directory to avoid writing to 
       // the same file twice
@@ -267,5 +271,3 @@ int8_t SD_Writer::deleteFile(const char * filename){
     return 1;
   }
 }
-
-SD_Writer sd_writer;

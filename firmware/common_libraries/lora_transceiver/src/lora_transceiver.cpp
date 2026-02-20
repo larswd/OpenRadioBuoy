@@ -12,10 +12,10 @@ void setFlag(void){
 // Read Buoy ID from wio device
 void LoRa_Transceiver::getBuoyID(void){
   // Only UID0 seems to be necessary 
-  buoy_ID = HAL_GetUIDw0();
+  WiO_ID = HAL_GetUIDw0();
   if (debug_serial){
     Serial.print("Buoy ID: ");
-    Serial.print(buoy_ID);
+    Serial.print(WiO_ID);
   }
 }
 
@@ -161,12 +161,10 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
   changeFrequency(LoRa_freq_send);
   byte handshake[2 + sizeof(baseStationID) + sizeof(uint32_t)];
   handshake[0] = 'U';
-  msg_insert_uint(handshake, buoy_ID, 1, 2 + sizeof(baseStationID) + sizeof(buoy_ID), true);
+  msg_insert_uint(handshake, WiO_ID, 1, 2 + sizeof(baseStationID) + sizeof(WiO_ID), true);
   handshake[sizeof(handshake) - 2] = baseStationID;
   handshake[sizeof(handshake) - 1] = 'E';
   radio.startTransmit(handshake, sizeof(handshake));
-  sd_writer.logString("Handshake sent!\n");
-  sd_writer.logByteArray(handshake, 7);
   if (debug_serial){
     Serial.println("Handshake sent to base station!");
   }
@@ -190,16 +188,16 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
       IWatchdog.reload();
       // Last format B + 4*id + BST_ID + 4*listenTime + E
       if (buoy_signal.msg[0] == 'B' && buoy_signal.msgSize == 3 + 2*sizeof(uint32_t)){
-        uint32_t buoy_ID_received = msg_extract_uint<uint32_t>(buoy_signal.msg, 1,true);
-        bool matching_Bid = (baseStationID == buoy_signal.msg[1 + sizeof(buoy_ID)]);
-        bool matching_Uid = (buoy_ID == buoy_ID_received); 
+        uint32_t WiO_ID_received = msg_extract_uint<uint32_t>(buoy_signal.msg, 1,true);
+        bool matching_Bid = (baseStationID == buoy_signal.msg[1 + sizeof(WiO_ID)]);
+        bool matching_Uid = (WiO_ID == WiO_ID_received); 
         if (matching_Bid && matching_Uid){
   
           if (debug_serial){
             Serial.println("Base station found!");
           }
 
-          listenTime = msg_extract_uint<uint32_t>(buoy_signal.msg, 1 + sizeof(buoy_ID) + sizeof(baseStationID),true);
+          listenTime = msg_extract_uint<uint32_t>(buoy_signal.msg, 1 + sizeof(WiO_ID) + sizeof(baseStationID),true);
           if (debug_serial){
             Serial.print("Listen time: ");
             Serial.println(listenTime);
@@ -401,22 +399,14 @@ void LoRa_Transceiver::wakeUp(void){
   }
 }
 
-void LoRa_Transceiver::transmitBeaconMessage(GPS_Data position){
+void LoRa_Transceiver::transmitBeaconMessage(byte * beaconMsg, uint8_t msgSize){
  /*
   Send the last measured position every five minutes at the Beacon frequency 
   fB
  */ 
   changeFrequency(LoRa_freq_beacon);
-  byte beaconMsg[beaconMsgSize];
-  beaconMsg[0] = 'U';
-  beaconMsg[1] = 'R';
-  msg_insert_uint(beaconMsg, position.timestamp, 2, beaconMsgSize, true);
-  msg_insert_uint(beaconMsg, position.lat, 2 + sizeof(time_t), beaconMsgSize, true);
-  msg_insert_uint(beaconMsg, position.lng, 2 + sizeof(time_t) + sizeof(uint32_t), beaconMsgSize, true);
-  msg_insert_uint(beaconMsg, buoy_ID, 2 + sizeof(time_t) + 2*sizeof(uint32_t), beaconMsgSize, true);
-  beaconMsg[beaconMsgSize -1] = 'E';
   for (uint8_t i = 0; i < 5; i++){
-    transmitB(beaconMsg, beaconMsgSize);
+    transmitB(beaconMsg, msgSize);
     waitUntilReady();
     delay(500);
   }

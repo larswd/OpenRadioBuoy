@@ -1,23 +1,19 @@
 #ifndef LORA_MANAGER_H
 #define LORA_MANAGER_H
 
-#include "RadioLib.h"
 #include "config.h"
+#include "parser_utils.h"
+#include "RadioLib.h"
 #include "etl/string.h"
 #include "etl/deque.h"
 #include "etl/vector.h"
 #include "IWatchdog.h"
-#include "gps_manager.h"
-
-
 
 
 //This function is difficult to weave into a class structure
 void setFlag(void);
 
 static volatile bool operationDone = false;
-static constexpr uint32_t beaconMsgSize  {3 + sizeof(time_t) + 3*sizeof(uint32_t)};
-
 
 struct Message{
   byte msg[max_message_length];
@@ -32,7 +28,7 @@ struct Message_Data{
 
 class LoRa_Transceiver{
   public:
-    uint32_t buoy_ID;
+    uint32_t WiO_ID;
     uint32_t listenTime = 0;
     uint8_t baseStationID = 0;
     uint32_t startup_timestamp = 0;
@@ -60,7 +56,7 @@ class LoRa_Transceiver{
     uint16_t msgCounter = 0;
     void sleep(void);
     void wakeUp(void);
-    void transmitBeaconMessage(GPS_Data position);
+    void transmitBeaconMessage(byte * beaconMsg, uint8_t msgSize);
 
   private:
     STM32WLx radio = new STM32WLx_Module();

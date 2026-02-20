@@ -29,6 +29,7 @@ struct DateInfo{
   bool valid;
 };
 
+static constexpr uint32_t beaconMsgSize  {3 + sizeof(time_t) + 3*sizeof(uint32_t)};
 static constexpr uint8_t GPS_message_size {2+sizeof(time_t)+4*sizeof(uint32_t) + sizeof(uint16_t)};
 static constexpr uint8_t deployment_message_size {2 + sizeof(uint32_t) + sizeof(time_t) + 2*sizeof(uint32_t) + 1};
 class GPS_Manager{
@@ -54,8 +55,9 @@ class GPS_Manager{
     uint32_t current_buoy_velocity = 0;
     void getMeasurementFromFile(void);
     GPS_Data currentPosition;
+    void updateBeaconMsg(uint32_t WiO_ID);
+    byte beaconMsg[beaconMsgSize];
   private:
-    uint16_t year0 = 2024;
     uint8_t getGPSData(uint32_t max_wait_time);
     
     etl::vector<GPS_Data, measurements_per_packet> packet;

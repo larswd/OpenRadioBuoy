@@ -7,7 +7,7 @@
 #include "etl/string.h"
 #include "config.h"
 #include "stats.h"
-#include "SD_writer.h"
+#include "sd_writer.h"
 #include "TimeLib.h"
 #include "parser_utils.h"
 

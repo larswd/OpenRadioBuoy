@@ -2,6 +2,11 @@
 #define CONFIG_H
 #include "Arduino.h"
 
+static constexpr uint8_t BUOY_MODE {0};
+static constexpr uint8_t BST_MODE {1};
+
+static constexpr uint8_t WIO_MODE {BUOY_MODE}; 
+
 /*
  Useful constants
  Do note, base time unit in arduino is milliseconds.

@@ -1,0 +1,26 @@
+{
+  "name": "OLB_LoRa_Transceiver",
+  "version": "1.0.0",
+  "description": "Radio (LoRa) manager for the Open Lora Buoy",
+  "keywords": "LoRa, RadioLib, OLB",
+  "authors":
+  [
+    {
+      "name": "Lars Willas Dreyer",
+      "email": "larswd@proton.me",
+      "url": "https://www.larswd.github.io",
+      "maintainer" : true
+    },
+    {
+      "name": "Andrea Pferscher",
+      "email": "andreapf@ifi.uio.no"
+    },
+    {
+      "name": "Riccardo Sieve",
+      "email": "riccasi@ifi.uio.no"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "arduino",
+  "platforms": "ststm32"
+}

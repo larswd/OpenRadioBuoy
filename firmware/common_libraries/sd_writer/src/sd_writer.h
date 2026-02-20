@@ -16,6 +16,12 @@
 static constexpr uint8_t OLB_SD_INACTIVE   {0};
 static constexpr uint8_t OLB_SD_WRITE_MODE {1};
 static constexpr uint8_t OLB_SD_READ_MODE  {2};
+static constexpr uint8_t DEBUG_MODE_NOTECARD_RESET {3};
+static constexpr uint8_t DEBUG_MODE_BST_HEARTBEAT  {4};
+static constexpr uint8_t DEBUG_MODE_NOTEHUB_SYNC   {5};
+static constexpr uint8_t DEBUG_MODE_BUOY_COMM      {6};
+static constexpr uint8_t DEBUG_MODE_BUOY_RESCUE    {7};
+
 
 
 /*
@@ -33,7 +39,7 @@ struct fileLine{
 
 class SD_Writer{
   public:
-    bool begin(int8_t cs_pin, bool countLogFiles);
+    bool begin();
     int8_t startLogging(String filename);
     int8_t startLogging(const char * filename);
     int8_t startReading(String filename);
@@ -60,7 +66,7 @@ class SD_Writer{
     File LogFile;
     SdFat SD;
     fileLine line;
-    uint16_t countFiles(const char * directory);
+    uint16_t countFilesInDirectory(const char * dirName);
 };
 
 extern SD_Writer sd_writer;

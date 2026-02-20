@@ -404,5 +404,18 @@ void GPS_Manager::getMeasurementFromFile(void){
     }
   }
 }
+
+
+void GPS_Manager::updateBeaconMsg(uint32_t WiO_ID){
+  beaconMsg[0] = 'U';
+  beaconMsg[1] = 'R';
+  msg_insert_uint(beaconMsg, currentPosition.timestamp, 2, beaconMsgSize, true);
+  msg_insert_uint(beaconMsg, currentPosition.lat, 2 + sizeof(time_t), beaconMsgSize, true);
+  msg_insert_uint(beaconMsg, currentPosition.lng, 2 + sizeof(time_t) + sizeof(uint32_t), beaconMsgSize, true);
+  msg_insert_uint(beaconMsg, WiO_ID, 2 + sizeof(time_t) + 2*sizeof(uint32_t), beaconMsgSize, true);
+  beaconMsg[beaconMsgSize -1] = 'E';
+}
+
+
 // Default GPS manager on RX1/TX1
 GPS_Manager gps_manager(GPS_RX_PIN, GPS_TX_PIN);

@@ -3,7 +3,7 @@
 #include "etl_error_manager.h"
 #include "lora_transceiver.h"
 #include "gps_manager.h"
-#include "SD_writer.h"
+#include "sd_writer.h"
 #include "thermo_manager.h"
 #include "IWatchdog.h"
 #include "STM32LowPower.h"
@@ -22,6 +22,7 @@ static uint32_t sleep_cycles_measurement  = 0;
 static uint32_t sleep_cycles_transmission = 0;
 static uint32_t sleep_cycles_beacon       = 0;
 static uint32_t iterations_counter = 0;
+
 
 uint32_t millis_time_corrected(uint32_t sleep_cycles){
   return millis() + sleep_cycles*watchdog_wait_time/2;
@@ -116,7 +117,7 @@ void setup() {
   */
   thermo_manager.begin(PA9,PB10);
 
-  gps_manager.getDeploymentMessage(LORA.buoy_ID);
+  gps_manager.getDeploymentMessage(LORA.WiO_ID);
   LORA.startup_timestamp = gps_manager.timestamp;
   IWatchdog.reload();
   if (debug_serial){
@@ -367,7 +368,8 @@ void loop() {
   // Recovery protocol
   if ((millis_time_corrected(sleep_cycles_beacon) - beacon_timer > beacon_ping_period) && (enable_recovery_beacon)){
     LORA.wakeUp();
-    LORA.transmitBeaconMessage(gps_manager.currentPosition);
+    gps_manager.updateBeaconMsg(LORA.WiO_ID);
+    LORA.transmitBeaconMessage(gps_manager.beaconMsg, beaconMsgSize);
     sleep_cycles_beacon = 0;
     beacon_timer        = millis();
     LORA.sleep();
