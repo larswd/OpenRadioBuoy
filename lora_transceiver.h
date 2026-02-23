@@ -48,7 +48,7 @@ class LoRa_Transceiver{
     ByteMessage byte_buoy_msg;
     bool listening = false;
     void changeFrequency(double);
-    private:
+  private:
     STM32WLx radio = new STM32WLx_Module();
     const uint32_t rfswitch_pins[5] = {PA4, PA5, RADIOLIB_NC, RADIOLIB_NC, RADIOLIB_NC};
     const Module::RfSwitchMode_t rfswitch_table[4] = {

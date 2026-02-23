@@ -27,7 +27,7 @@ public:
     void sendMessage(const char* msg);
     void sendBuoyMessage(BuoyMessage* msg, uint32_t id);
     void sendBeaconMessage(BeaconOutgoingMessage* msg);
-    void syncMessages(boolean sync_input);
+    void syncMessages(bool sync_input);
     BeaconIncomingMessage receiveBeaconMessage(bool rescue_mode, time_t timeout);
     time_t getDate();
 

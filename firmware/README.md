@@ -4,5 +4,6 @@ The firmware for the OLB is different applications bulit around a set of sometim
 | Module | Description | Dependencies |
 | ------ | ----------- | ------------ |
 | [```etl_error_manager```](common_libraries/etl_error_manager/) | Here we specify how ETL is supposed to handle different errors | None |
-| ```gps_manager``` | Handling of the onboard GPS and its measurements | [```etl_error_manager```](common_libraries/etl_error_manager/), ```thermo_manager```, ```stats```, ```sd_writer``` [```TinyGPSPlus```](https://github.com/mikalhart/TinyGPSPlus), ```parser_utils```  |
-| ```sd_writer``` | All operations when it comes to file management and file writing to the onboard sd card | ```etl_error_manager``` |
+| [```gps_manager```](common_libraries/gps_manager/) | Handling of the onboard GPS and its measurements | [```etl_error_manager```](common_libraries/etl_error_manager/), [```thermo_manager```](common_libraries/thermo_manager/), [```stats```](common_libraries/stats/), [```sd_writer```](common_libraries/sd_writer/), [```TinyGPSPlus```](https://github.com/mikalhart/TinyGPSPlus), [```parser_utils```](common_libraries/parser_utils/)  |
+| [```gsm```](common_libraries/gsm/) | All operations when it comes to the GSM module on the base station. Do note all supported message structures are defined in the [```messages.h file```](common_libraries/gsm/src/messages.h). | [```etl_error_manager```](common_libraries/etl_error_manager/), [```sd_writer```](common_libraries/sd_writer/) |
+| [```sd_writer```](common_libraries/sd_writer/) | All operations when it comes to file management and file writing to the onboard sd card | [```etl_error_manager```](common_libraries/etl_error_manager/) |

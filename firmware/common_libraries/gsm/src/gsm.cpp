@@ -70,7 +70,7 @@ long GSM_module::getTime()
 FrequencyMessage GSM_module::receiveMeasurementFrequency()
 {
     // inbound communication
-    FrequencyMessage frequency_msg = {default_update_frequency, default_measurement_frequency, default_adaptive_frequency, default_target_length, default_threshold_velocity};
+    FrequencyMessage frequency_msg = {default_update_frequency, base_measurement_period, targetReadingDistance, motion_treshold};
    
 
     // TODO: replace by note.get, see https://dev.blues.io/notecard/notecard-walkthrough/inbound-requests-and-shared-data/
@@ -158,7 +158,7 @@ void GSM_module::sendMessage(const char *msg)
     }
 }
 
-void GSM_module::syncMessages(boolean sync_input)
+void GSM_module::syncMessages(bool sync_input)
 {
     J *sync_req = NoteNewRequest("hub.sync");
     JAddBoolToObject(sync_req, "in", sync_input);

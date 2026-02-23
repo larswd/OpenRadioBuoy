@@ -1,3 +1,5 @@
+#ifndef MESSAGE_PARSER_H
+#define MESSAGE_PARSER_H
 #include <TimeLib.h>
 #include <Arduino.h>
 #include "readings.h"
@@ -13,3 +15,4 @@ class Message_Parser{
 };
 
 extern Message_Parser MESSAGE_PARSER;
+#endif

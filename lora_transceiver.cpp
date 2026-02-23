@@ -155,6 +155,7 @@ void LoRa_Transceiver::listen(uint32_t max_wait_time)
   {
     delay(100);
   }
+  
   if (operationDone)
   {
     operationDone = false;

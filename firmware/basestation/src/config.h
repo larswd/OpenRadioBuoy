@@ -45,7 +45,7 @@ static constexpr bool enable_handshake              {true};
 static constexpr int serial_baud                    {115200};
 
 // Drifters parameters
-static constexpr int max_thermometer                {8};
+static constexpr int max_number_of_thermometres          {8};
 static constexpr uint32_t scale_factor              {100000};
 
 // Watchdog parameters
@@ -61,15 +61,15 @@ static constexpr int reset_frequency                {120 * 60 * 1000}; // 2 h
 
 // Adaptive frequency parameters
 static constexpr bool get_frequency_from_notehub            {false}; 
-static constexpr uint32_t default_measurement_frequency     {10*60*1000}; // 10 minutes
-static constexpr bool default_update_frequency              {false};
-static constexpr bool default_adaptive_frequency            {false};
-static constexpr uint32_t default_target_length             {100};
-static constexpr uint32_t default_threshold_velocity        {5000}; // m/s, divided by 10^4
+static           uint32_t base_measurement_period           {10*60*1000}; // 10 minutes
+static           bool default_update_frequency              {false};
+static           bool enable_motion_detection               {false};
+static           uint32_t targetReadingDistance             {100};
+static           uint32_t motion_treshold                   {2000}; // m/s, divided by 10^4
 
 // Buoy rescue parameters
 static constexpr bool enable_rescue_from_notehub            {true}; 
-static constexpr float LoRa_freq_rescue                     {868.00};
+static constexpr float LoRa_freq_beacon                     {868.00};
 
 
 #endif

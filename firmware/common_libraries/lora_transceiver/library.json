@@ -22,5 +22,8 @@
   ],
   "license": "MIT",
   "frameworks": "arduino",
-  "platforms": "ststm32"
+  "platforms": "ststm32",
+  "dependencies": {
+    "jgromes/RadioLib" : "^7.1.0"
+  }
 }

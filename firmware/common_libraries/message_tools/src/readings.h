@@ -1,16 +1,17 @@
 // #include "etl/deque.h"
+#ifndef READINGS_H
+#define READINGS_H
+
 #include <Arduino.h>
 #include "config.h"
 
 // typedef byte BuoyID[8];
 
-const uint32_t max_temp_sensor = max_thermometer;
-
 struct temperature_Reading
 {
     uint16_t reading_ID;
     uint8_t num_sensors;
-    int32_t temps[max_temp_sensor] = {0};
+    int32_t temps[max_number_of_thermometres] = {0};
     time_t timestamp;
 };
 
@@ -51,3 +52,5 @@ struct buoyInitMessage
     uint32_t buoy_id;
     uint8_t base_station_ID;
 };
+
+#endif

@@ -27,7 +27,7 @@ struct FrequencyMessage{
 
 struct BeaconIncomingMessage{
     bool enable_rescue_mode;
-    uint32_t timeout_rescue_mode;
+    time_t timeout_rescue_mode;
 };
 
 struct BeaconOutgoingMessage{
@@ -40,4 +40,20 @@ struct BeaconOutgoingMessage{
 
 
 
+struct StringMessage{
+  String msg; // TODO: replace more meaningful struct
+  bool success;
+};
+
+
+
+struct Message_Data{
+  uint32_t RSSI;
+  uint32_t SNR;
+};
+
+struct buoyInfo{
+  uint32_t ID;
+  bool inrange;
+};
 #endif

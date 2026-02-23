@@ -12,7 +12,7 @@ uint32_t health_time_start;
 uint32_t notecard_reset_start;
 uint32_t notecard_input_sync_start;
 
-static FrequencyMessage adaptive_frequency_msg = {default_update_frequency, default_measurement_frequency, default_adaptive_frequency, default_target_length, default_threshold_velocity};
+static FrequencyMessage adaptive_frequency_msg = {default_update_frequency, base_measurement_period, enable_motion_detection, targetReadingDistance, motion_treshold};
 
 bool rescue_mode = false;
 uint32_t rescue_timeout = 0;
@@ -43,7 +43,8 @@ void setup()
   // }
 
   LORA.beginRadio(LoRa_freq_receive, LoRa_bw, LoRa_sf, LoRa_cr, LoRa_power);
-  LORA.computeReceptionChannel();
+  LORA.getWiOID();
+  LORA.computeReceptionChannel(num_LoRa_channels, LoRa_freq_receive_min, LoRa_freq_receive_max);
   // set up GSM connection
   //GSM.begin();
 
@@ -127,7 +128,7 @@ void loop()
      {
       IWatchdog.reload();
 
-      LORA.changeFrequency(LoRa_freq_rescue);
+      LORA.changeFrequency(LoRa_freq_beacon);
       uint32_t listen_time_delta = 1000;
       uint32_t startListen = millis();
       std::queue<BeaconOutgoingMessage *> beaconMessageQueue;
@@ -138,14 +139,14 @@ void loop()
 
 
         LORA.listenByteArray(10000);
-        if (LORA.byte_buoy_msg.success)
+        if (LORA.byte_msg.success)
         {
 
           sd_writer.debugSerialPrint("Receiving message: ");
-          sd_writer.debugSerialPrintln((char)LORA.byte_buoy_msg.byteMsg[0]);
+          sd_writer.debugSerialPrintln((char)LORA.byte_msg.byteMsg[0]);
 
           sd_writer.debugSerialPrint("Received message bytes: ");
-          sd_writer.debugByteArray(LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
+          sd_writer.debugByteArray(LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);
           sd_writer.debugSerialPrintln("");
           
 
@@ -153,11 +154,11 @@ void loop()
           float rssi = LORA.getRSSI();
           sd_writer.debugSerialPrintln(rssi);
 
-          if (LORA.byte_buoy_msg.byteMsg[0] == 'U' && LORA.byte_buoy_msg.byteMsg[1] == 'R')
+          if (LORA.byte_msg.byteMsg[0] == 'U' && LORA.byte_msg.byteMsg[1] == 'R')
           {
 
             sd_writer.debugSerialPrint("Received beacon message");
-            beacon_Reading b = MESSAGE_PARSER.parse_beacon_message(LORA.byte_buoy_msg.byteMsg);
+            beacon_Reading b = MESSAGE_PARSER.parse_beacon_message(LORA.byte_msg.byteMsg);
             sd_writer.debugSerialPrint("timestamp: ");
             sd_writer.debugSerialPrint(b.timestamp);
             sd_writer.debugSerialPrint(", lat: ");
@@ -236,13 +237,13 @@ void loop()
         
         // This should probably be a variable
         LORA.listenByteArray(10000);
-        if (LORA.byte_buoy_msg.success)
+        if (LORA.byte_msg.success)
         {
           sd_writer.debugSerialPrint("Receiving message: ");
-          sd_writer.debugSerialPrintln((char)LORA.byte_buoy_msg.byteMsg[0]);
+          sd_writer.debugSerialPrintln((char)LORA.byte_msg.byteMsg[0]);
 
           sd_writer.debugSerialPrint("Received message bytes: ");
-          sd_writer.debugByteArray(LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
+          sd_writer.debugByteArray(LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);
           sd_writer.debugSerialPrintln("");
           
 
@@ -250,20 +251,20 @@ void loop()
           float rssi = LORA.getRSSI();
           sd_writer.debugSerialPrintln(rssi);
 
-          if (LORA.byte_buoy_msg.byteMsg[0] == 'G')
+          if (LORA.byte_msg.byteMsg[0] == 'G')
           {
             // Receive GPS message
             // GSM.sendByteMessage(LORA.byte_buoy_msg);
             BuoyMessage *qMsg = new BuoyMessage;
             qMsg->byteMsg = new ByteMessage;
             qMsg->rssi = rssi;
-            qMsg->byteMsg->numBytes = LORA.byte_buoy_msg.numBytes;
-            memcpy(qMsg->byteMsg->byteMsg, LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
+            qMsg->byteMsg->numBytes = LORA.byte_msg.numBytes;
+            memcpy(qMsg->byteMsg->byteMsg, LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);
             messageQueue.push(qMsg);
 
             // GSM.sendMessage("location info");
             sd_writer.debugSerialPrintln("location info");
-            GPS_Reading g = MESSAGE_PARSER.parse_gps_message(LORA.byte_buoy_msg.byteMsg);
+            GPS_Reading g = MESSAGE_PARSER.parse_gps_message(LORA.byte_msg.byteMsg);
             sd_writer.debugSerialPrint("reading id: ");
             sd_writer.debugSerialPrint(g.reading_ID);
             sd_writer.debugSerialPrint(", lat: ");
@@ -277,7 +278,7 @@ void loop()
             sd_writer.debugSerialPrint(", timestamp: ");
             sd_writer.debugSerialPrintln(g.timestamp);
           }
-          else if (LORA.byte_buoy_msg.byteMsg[0] == 'T')
+          else if (LORA.byte_msg.byteMsg[0] == 'T')
           {
             // GSM.sendMessage("temperature info");
             // GSM.sendByteMessage(LORA.byte_buoy_msg);
@@ -291,17 +292,17 @@ void loop()
             BuoyMessage *qMsg = new BuoyMessage;
             qMsg->byteMsg = new ByteMessage;
             qMsg->rssi = rssi;
-            qMsg->byteMsg->numBytes = LORA.byte_buoy_msg.numBytes;
-            memcpy(qMsg->byteMsg->byteMsg, LORA.byte_buoy_msg.byteMsg, LORA.byte_buoy_msg.numBytes);
+            qMsg->byteMsg->numBytes = LORA.byte_msg.numBytes;
+            memcpy(qMsg->byteMsg->byteMsg, LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);
             messageQueue.push(qMsg);
 
             sd_writer.debugSerialPrintln("temperature info");
             // Receive temperature message
-            temperature_Reading c = MESSAGE_PARSER.parse_temperature_message(LORA.byte_buoy_msg.byteMsg);
+            temperature_Reading c = MESSAGE_PARSER.parse_temperature_message(LORA.byte_msg.byteMsg);
             sd_writer.debugSerialPrint("reading id: ");
             sd_writer.debugSerialPrint(c.reading_ID);
             sd_writer.debugSerialPrint(", ");
-            for (int i = 0; i < max_thermometer; i++){
+            for (int i = 0; i < max_number_of_thermometres; i++){
               sd_writer.debugSerialPrint("temperature sensor ");
               sd_writer.debugSerialPrint(i);
               sd_writer.debugSerialPrint(": ");
@@ -311,18 +312,18 @@ void loop()
             sd_writer.debugSerialPrint(", timestamp: ");
             sd_writer.debugSerialPrintln(c.timestamp);
           }
-          else if (LORA.byte_buoy_msg.byteMsg[0] == 'R')
+          else if (LORA.byte_msg.byteMsg[0] == 'R')
           {
-            turbidity_Reading turbidity_msg = MESSAGE_PARSER.parse_turbidity_message(LORA.byte_buoy_msg.byteMsg);
+            turbidity_Reading turbidity_msg = MESSAGE_PARSER.parse_turbidity_message(LORA.byte_msg.byteMsg);
             // Serial.println("turbidity info");
             // Serial.print("voltage: ");
             // Serial.println(turbidity_msg.voltage);
           }
-          else if (LORA.byte_buoy_msg.byteMsg[0] == 'E' && LORA.byte_buoy_msg.byteMsg[1] == 'M')
+          else if (LORA.byte_msg.byteMsg[0] == 'E' && LORA.byte_msg.byteMsg[1] == 'M')
           {
             sd_writer.debugSerialPrintln("end message");
 
-            buoyInfoReading b = MESSAGE_PARSER.parse_buoy_info_message(LORA.byte_buoy_msg.byteMsg);
+            buoyInfoReading b = MESSAGE_PARSER.parse_buoy_info_message(LORA.byte_msg.byteMsg);
 
             sd_writer.debugSerialPrint("Sent packets: ");
             sd_writer.debugSerialPrint(b.sent_packets);

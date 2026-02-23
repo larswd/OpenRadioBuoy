@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "etl_error_manager.h"
+#include "messages.h"
 #include "lora_transceiver.h"
 #include "gps_manager.h"
 #include "sd_writer.h"
@@ -64,7 +65,7 @@ void setup() {
     Buoy will not start without working radio.
   */
   LORA.beginRadio(LoRa_freq_receive, LoRa_bw, LoRa_sf, LoRa_cr, LoRa_power);
-  LORA.getBuoyID();
+  LORA.getWiOID();
   if (LORA.state == RADIOLIB_ERR_NONE){
     if (debug_serial){
       Serial.println(F("Radio functional!!!")); 
@@ -243,7 +244,7 @@ void loop() {
       IWatchdog.reload();
       // We update the measurements period to reflect the new motion paradigme
       if (enable_motion_detection){
-        LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity);
+        LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity, maximal_measurement_period, minimal_measurement_period);
       }
     } else {
       // If no fix was found, we skip this measurement and hope for better luck the next time around. 
@@ -346,7 +347,7 @@ void loop() {
         //LORA.receiveDesiredMeasrements();
         //sd_writer.fetchRequestedMeasurements(LORA.measurementTargets);
       }
-      LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity);
+      LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity, maximal_measurement_period, minimal_measurement_period);
 
     }
     

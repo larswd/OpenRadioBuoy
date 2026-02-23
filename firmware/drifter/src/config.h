@@ -20,7 +20,7 @@ static constexpr float    mps_2_kmph                       {3.6};
 
 // Radio parameters
 static           uint32_t minimal_transmission_period    {60*s_2_ms};
-static constexpr float    LoRa_freq_receive              {863};
+static           float    LoRa_freq_receive              {863};
 static constexpr float    LoRa_bw                        {125.0};
 static constexpr uint8_t  LoRa_sf                        {8};
 static constexpr uint8_t  LoRa_cr                        {6};
