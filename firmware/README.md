@@ -1,5 +1,8 @@
 # OLB firmware
-The firmware for the OLB is different applications bulit around a set of sometimes shared libraries. In fact, each application folder, currently ```drifter``` and ```basestation``` each only consist of an unique ```main.cpp``` and ```config.h```. All modules that relate to one or more component is located in the ```common_libraries``` folder, and is included in the applications through the ```platformio.ini``` file. The current modules are, with descriptions and  listed dependencies (with the exception of the excellent [Embedded Template Library (ETL)](https://www.etlcpp.com/) which is omitted due to it being a dependency for all the modules more or less)
+The firmware for the OLB is different applications bulit around a set of sometimes shared libraries. In fact, each application folder, currently ```drifter``` and ```basestation``` each only consist of an unique ```main.cpp``` and ```config.h```. All modules that relate to one or more component is located in the ```common_libraries``` folder, and is included in the applications through the ```platformio.ini``` file.
+
+## Common modules
+The current modules are, with descriptions and  listed dependencies (with the exception of the excellent [Embedded Template Library (ETL)](https://www.etlcpp.com/) which is omitted due to it being a dependency for all the modules more or less)
 
 | Module | Description | Dependencies |
 | ------ | ----------- | ------------ |
@@ -9,6 +12,9 @@ The firmware for the OLB is different applications bulit around a set of sometim
 | [```lora_transceiver```](common_libraries/lora_transceiver/) | Radio communication manager. Functionality for both buoy and BST. | [```etl_error_manager```](common_libraries/etl_error_manager/), [```sd_writer```](common_libraries/sd_writer/), [```message_tools```](common_libraries/message_tools/), [```parser_utils```](common_libraries/parser_utils/), [```RadioLib```](https://github.com/jgromes/RadioLib)  |
 | [```message_tools```](common_libraries/message_tools/) | Data structures and parsing tools for the different kind of OLB LoRa messages | None |
 | [```parser_utils```](common_libraries/parser_utils/) | Templates for inserting and extracting integers from byte arrays | None | 
-| [```sd_writer```](common_libraries/sd_writer/) | All operations when it comes to file management and file writing to the onboard sd card | [```etl_error_manager```](common_libraries/etl_error_manager/) |
+| [```sd_writer```](common_libraries/sd_writer/) | All operations when it comes to file management and file writing to the onboard sd card | [```etl_error_manager```](common_libraries/etl_error_manager/), [```SdFat```](https://github.com/greiman/SdFat) |
 | [```stats```](common_libraries/stats/) | Measurement filtering and post-processing | None | 
-| [```thermo_manager```](common_libraries/thermo_manager/) | Library to managae everything related to the onboard thermometres. | [```stats```](common_libraries/stats/), [```sd_writer```](common_libraries/sd_writer/), [```parser_utils```](common_libraries/parser_utils/), [```OneWire```](https://github.com/PaulStoffregen/OneWire) | 
+| [```thermo_manager```](common_libraries/thermo_manager/) | Library to manage everything related to the onboard thermometres. More or less a compatability port of the excellent [OpenMetBuoy thermistor library](https://github.com/jerabaul29/OpenMetBuoy-v2021a/blob/main/legacy_firmware/firmware/plain_gps_drifter/thermistors_manager.h) | [```stats```](common_libraries/stats/), [```sd_writer```](common_libraries/sd_writer/), [```parser_utils```](common_libraries/parser_utils/), [```OneWire```](https://github.com/PaulStoffregen/OneWire) | 
+
+## The Drifter firmware
+The drifter platformio project is the full software package used by the OLB drifters, and the configuration file is currently set in a default configuration for a drifter where power usage is a priority. A parameter table is given in the drifter folder README
