@@ -2,6 +2,11 @@
 #define CONFIG_H
 #include "Arduino.h"
 
+static constexpr uint8_t BUOY_MODE {0};
+static constexpr uint8_t BST_MODE {1};
+
+static constexpr uint8_t WIO_MODE {BUOY_MODE}; 
+
 // Useful constants
 static constexpr uint32_t s_2_ms                         {1000};
 static constexpr uint32_t min_2_s                          {60};
@@ -27,14 +32,14 @@ static constexpr uint8_t  GPS_TX_PIN                     {PC1};
 static constexpr uint8_t  GPS_SLEEP_PIN                  {PA0};
 
 // Enable or disable parameters
-static constexpr bool remove_outliers                       {true};
-static constexpr bool debug_serial                          {true};
-static constexpr bool enable_GPS                            {true};
-static constexpr bool enable_watchdog                       {true};
-static constexpr int  serial_baud                           {115200};
-static           bool enable_motion_detection               {false};
-static constexpr bool sleep_GPS                             {true};
-
+static constexpr bool remove_outliers           {true};
+static constexpr bool debug_serial              {true};
+static constexpr bool enable_GPS                {true};
+static constexpr bool enable_watchdog           {true};
+static constexpr int  serial_baud               {115200};
+static           bool enable_motion_detection   {false};
+static constexpr bool sleep_GPS                 {true};
+static constexpr bool debug_SD                  {false};
 // Motion parameters
 static float    motion_treshold                          {0.5};
 static uint32_t targetReadingDistance                    {30};

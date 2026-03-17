@@ -4,8 +4,10 @@
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
 #include <HardwareSerial.h>
-#include "thermo_manager.h"
 #include "config.h"
+#include "sd_writer.h"
+#include "parser_utils.h"
+#include "stats.h"
 #include "etl/deque.h"
 #include "etl/vector.h"
 #include "etl/string.h"

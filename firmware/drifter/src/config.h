@@ -19,13 +19,13 @@ static constexpr float    mps_2_kmph                       {3.6};
 
 
 // Radio parameters
-static           uint32_t minimal_transmission_period    {60*s_2_ms};
+static           uint32_t minimal_transmission_period    {10*s_2_ms};
 static           float    LoRa_freq_receive              {863};
 static constexpr float    LoRa_bw                        {125.0};
 static constexpr uint8_t  LoRa_sf                        {8};
 static constexpr uint8_t  LoRa_cr                        {6};
 static constexpr uint8_t  LoRa_power                     {15};
-static constexpr uint8_t  packet_count_send_treshold     {4};
+static constexpr uint8_t  packet_count_send_treshold     {2};
 static constexpr int16_t  transmission_grace_period      {5*s_2_ms};
 static constexpr uint32_t max_radio_fix_look_time        {90*s_2_ms};
 static constexpr uint32_t max_radio_wait_time            {40*s_2_ms};
@@ -61,7 +61,7 @@ static constexpr uint8_t  GPS_SLEEP_PIN                  {PA0};
 // Enable or disable parameters
 static constexpr bool remove_outliers                       {true};
 static constexpr bool debug_serial                          {true};
-static constexpr bool enable_GPS                            {true};
+static constexpr bool enable_GPS                            {false};
 static constexpr bool enable_watchdog                       {true};
 static constexpr int  debug_SD                              {1};
 static constexpr int  serial_baud                           {115200};
@@ -81,5 +81,5 @@ static uint32_t targetReadingDistance                    {30};
 // Watchdog and power parameters
 static constexpr uint32_t watchdog_wait_time              {32000};
 static constexpr bool     debug_radio                     {false};
-static constexpr uint32_t sleep_time                      {12000};
+static constexpr uint32_t sleep_time                      {3000};
 #endif

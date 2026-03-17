@@ -22,5 +22,9 @@
   ],
   "license": "MIT",
   "frameworks": "arduino",
-  "platforms": "ststm32"
+  "platforms": "ststm32",
+  "dependencies": {
+	  "paulstoffregen/OneWire" : "^2.3.8",
+	  "etlcpp/Embedded Template Library" : "^20.39.4"
+  }
 }

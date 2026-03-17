@@ -205,7 +205,7 @@ void LoRa_Transceiver::findBaseStation(uint32_t max_wait_time){
   changeFrequency(LoRa_freq_receive);
   uint32_t wait_time_start = millis();
   while ((baseStationID < 1) && millis() - wait_time_start < max_wait_time){
-    listen(max_wait_time + wait_time_start - millis());
+    listenByteArray(max_wait_time + wait_time_start - millis());
     char msg1 = (char) byte_msg.byteMsg[0];
     char msg2 = (char) byte_msg.byteMsg[1];
     char msg3 = (char) byte_msg.byteMsg[2];

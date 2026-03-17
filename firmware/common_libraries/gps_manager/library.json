@@ -22,5 +22,9 @@
   ],
   "license": "MIT",
   "frameworks": "arduino",
-  "platforms": "ststm32"
+  "platforms": "ststm32",
+  "dependencies": {
+	  "mikalhart/TinyGPSPlus" : "^1.1.0",
+	  "etlcpp/Embedded Template Library" : "^20.39.4"
+  }
 }

@@ -43,6 +43,7 @@ class Thermo_Manager{
     void wake(void);
     void sleep(void);
     void getMeasurementFromFile(void);
+
   private:
     uint32_t readingStartTime;
     uint16_t dPin;

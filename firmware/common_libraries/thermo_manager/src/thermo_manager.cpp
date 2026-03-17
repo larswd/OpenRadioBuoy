@@ -322,7 +322,7 @@ uint8_t Thermo_Manager::takeReadings(uint32_t maxReadTime, time_t timestamp, boo
   uint32_t start = millis();
   packet.clear();
 
-  while(numPacketReadings < measurements_per_packet && millis() - start < maxReadTime){
+  while ((numPacketReadings < measurements_per_packet) && (millis() - start < maxReadTime)){
     request_start_thermistors_conversions();
     delay(400);
     collect_thermistors_conversions(timestamp);
