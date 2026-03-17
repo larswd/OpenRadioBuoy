@@ -91,3 +91,11 @@ Your OLB drifter is now ready to use.
 
 ## Images and deployments
 Images from the deployments will come soon. 
+
+## A small thanks 
+We would also like to thank the authors of the many open source libraries that collectively form the code base of the Open Lora Buoy. In no particular order, we wish to express our gratitude to 
+- [Paul Stoffregen and contributors' OneWire](https://github.com/PaulStoffregen/OneWire)
+- [Mikal Hart and contributors' TinyGPSplus](https://github.com/mikalhart/TinyGPSPlus)
+- [Jan Gromeš and contributors's Radiolib](https://github.com/jgromes/RadioLib)
+- [Bill Greiman's SdFat](https://github.com/greiman/SdFat)
+- [Jean Rabault's OpenMetBuoy](https://github.com/jerabaul29/OpenMetBuoy-v2021a)
