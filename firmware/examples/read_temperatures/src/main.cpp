@@ -3,8 +3,10 @@
 #include "sd_writer.h"
 #include "thermo_manager.h"
 /*
-  This sketch showcase  all the functionality of the GPS library
-
+  This sketch showcase  all the functionality of the thermistor library
+  Do note, this is more or less a port of the excellent thermistor library of
+  the OpenMetBuoy by Jean Rabault, and can be found here:
+  https://github.com/jerabaul29/OpenMetBuoy-v2021a/blob/main/legacy_firmware/firmware/plain_gps_drifter/thermistors_manager.h
 */
 
 static uint32_t measurement_timer;
