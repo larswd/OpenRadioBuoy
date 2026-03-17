@@ -64,7 +64,7 @@ static constexpr bool get_frequency_from_notehub            {false};
 static           uint32_t base_measurement_period           {10*60*1000}; // 10 minutes
 static           bool default_update_frequency              {false};
 static           bool enable_motion_detection               {false};
-static           uint32_t targetReadingDistance             {100};
+static           uint32_t target_reading_distance             {100};
 static           uint32_t motion_treshold                   {2000}; // m/s, divided by 10^4
 
 // Buoy rescue parameters

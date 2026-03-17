@@ -393,7 +393,7 @@ void LoRa_Transceiver::receiveDesiredMeasurementIDs(void){
 
       if (byte_msg.byteMsg[5] == 1){
         enable_motion_detection = true;
-        targetReadingDistance = msg_extract_uint<uint32_t>(byte_msg.byteMsg,6,true);
+        target_reading_distance = msg_extract_uint<uint32_t>(byte_msg.byteMsg,6,true);
         motion_treshold       = msg_extract_uint<uint32_t>(byte_msg.byteMsg, 10, true);
       } else {
         enable_motion_detection = false;
@@ -431,7 +431,7 @@ void LoRa_Transceiver::receiveInstructions(void){
 
       if (byte_msg.byteMsg[5] == 1){
         enable_motion_detection = true;
-        targetReadingDistance = msg_extract_uint<uint32_t>(byte_msg.byteMsg,6,true);
+        target_reading_distance = msg_extract_uint<uint32_t>(byte_msg.byteMsg,6,true);
         motion_treshold       = msg_extract_uint<uint32_t>(byte_msg.byteMsg, 10, true);
       } else {
         enable_motion_detection = false;
@@ -451,7 +451,7 @@ void LoRa_Transceiver::updateMeasurementFrequency(uint32_t velocity, uint32_t ma
   */
   float ms_2_s {1e-3};
   if (enable_motion_detection && (velocity > scale_factor*motion_treshold)){
-    measurement_period = min((uint32_t) (targetReadingDistance*scale_factor/(ms_2_s*velocity)), max_period);
+    measurement_period = min((uint32_t) (target_reading_distance*scale_factor/(ms_2_s*velocity)), max_period);
     measurement_period = max(measurement_period, min_period);
   } else {
     measurement_period = base_measurement_period;

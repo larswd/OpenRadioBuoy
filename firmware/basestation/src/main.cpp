@@ -12,7 +12,7 @@ uint32_t health_time_start;
 uint32_t notecard_reset_start;
 uint32_t notecard_input_sync_start;
 
-static FrequencyMessage adaptive_frequency_msg = {default_update_frequency, base_measurement_period, enable_motion_detection, targetReadingDistance, motion_treshold};
+static FrequencyMessage adaptive_frequency_msg = {default_update_frequency, base_measurement_period, enable_motion_detection, target_reading_distance, motion_treshold};
 
 bool rescue_mode = false;
 uint32_t rescue_timeout = 0;

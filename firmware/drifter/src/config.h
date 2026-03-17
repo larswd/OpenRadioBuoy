@@ -55,7 +55,7 @@ static constexpr bool remove_outliers                       {true};
 static constexpr bool debug_serial                          {true};
 static constexpr bool enable_GPS                            {true};
 static constexpr bool enable_watchdog                       {true};
-static constexpr int  debug_SD                              {1};
+static constexpr bool debug_SD                              {false};
 static constexpr int  serial_baud                           {115200};
 static           bool enable_motion_detection               {false};
 static constexpr bool transmitDeploymentMessage             {false};
@@ -69,10 +69,9 @@ static constexpr bool resync_RTC_using_GPS                  {true};
 
 // Motion parameters
 static float    motion_treshold                          {0.5};
-static uint32_t targetReadingDistance                    {30};
+static uint32_t target_reading_distance                    {30};
 
 // Watchdog and power parameters
-static constexpr uint32_t watchdog_wait_time              {32000};
-static constexpr bool     debug_radio                     {false};
-static constexpr uint32_t sleep_time                      {3000};
+static constexpr uint32_t watchdog_wait_time              {32*s_2_ms};
+static constexpr uint32_t sleep_time                      {9*s_2_ms};
 #endif

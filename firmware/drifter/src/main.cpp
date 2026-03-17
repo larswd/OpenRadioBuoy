@@ -137,10 +137,6 @@ void setup() {
     LORA.transmitB(gps_manager.deploymentMessage, deployment_message_size);
     sd_writer.logString(gps_manager.deploymentMessage, deployment_message_size);
     LORA.waitUntilReady();
-    //String firmware_ID = String(REPO_COMMIT_ID);
-    //LORA.transmit("Running firmware version: ");
-    //LORA.waitUntilReady();
-    //LORA.transmit(firmware_ID.c_str());
   }
   
   LORA.lastTransmission = millis();

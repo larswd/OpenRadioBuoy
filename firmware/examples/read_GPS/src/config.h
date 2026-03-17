@@ -42,7 +42,7 @@ static constexpr bool sleep_GPS                 {true};
 static constexpr bool debug_SD                  {false};
 // Motion parameters
 static float    motion_treshold                          {0.5};
-static uint32_t targetReadingDistance                    {30};
+static uint32_t target_reading_distance                    {30};
 
 // Watchdog and power parameters
 static constexpr uint32_t watchdog_wait_time              {32000};

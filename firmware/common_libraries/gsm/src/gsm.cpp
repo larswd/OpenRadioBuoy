@@ -70,7 +70,7 @@ long GSM_module::getTime()
 FrequencyMessage GSM_module::receiveMeasurementFrequency()
 {
     // inbound communication
-    FrequencyMessage frequency_msg = {default_update_frequency, base_measurement_period, targetReadingDistance, motion_treshold};
+    FrequencyMessage frequency_msg = {default_update_frequency, base_measurement_period, target_reading_distance, motion_treshold};
    
 
     // TODO: replace by note.get, see https://dev.blues.io/notecard/notecard-walkthrough/inbound-requests-and-shared-data/
