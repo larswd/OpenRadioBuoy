@@ -53,7 +53,7 @@ static constexpr uint32_t thermometre_pause_between_readings {300};
 // Enable or disable parameters
 static constexpr bool remove_outliers                       {true};
 static constexpr bool debug_serial                          {true};
-static constexpr bool enable_GPS                            {false};
+static constexpr bool enable_GPS                            {true};
 static constexpr bool enable_watchdog                       {true};
 static constexpr int  debug_SD                              {1};
 static constexpr int  serial_baud                           {115200};
