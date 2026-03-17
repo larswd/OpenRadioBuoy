@@ -315,14 +315,14 @@ void Thermo_Manager::sleep(void){
 uint8_t Thermo_Manager::takeReadings(uint32_t maxReadTime, time_t timestamp, bool logAllReadings){
   /*
     Public method which constructs a data packet of temperature readings
-    up until either the cap measurements_per_packet
+    up until either the cap readings_per_measurement
     or until the time runs out.
     If logReading is set to true, we dump each reading to te current active logfile
   */
   uint32_t start = millis();
   packet.clear();
 
-  while ((numPacketReadings < measurements_per_packet) && (millis() - start < maxReadTime)){
+  while ((numPacketReadings < readings_per_measurement) && (millis() - start < maxReadTime)){
     request_start_thermistors_conversions();
     delay(400);
     collect_thermistors_conversions(timestamp);
@@ -352,7 +352,7 @@ void Thermo_Manager::processReadings(){
   */
 
   // Vectors for post processing each thermometre individually
-  etl::vector<int32_t, measurements_per_packet> temp_array;
+  etl::vector<int32_t, readings_per_measurement> temp_array;
   
   uint8_t oldSize = packet.size();
   uint8_t newSize = oldSize;

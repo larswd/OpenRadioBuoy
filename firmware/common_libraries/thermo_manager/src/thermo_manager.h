@@ -15,6 +15,7 @@ using Address = uint8_t[8];
 
 // T + E + numSensors + 5 byte per thermometre + 9 byte for timestamp
 static constexpr uint8_t thermo_message_size {3 + sizeof(uint16_t) + 5*max_number_of_thermometres + 1 + sizeof(time_t)};
+static constexpr uint8_t  thermometre_resolution             {12};
 
 struct temperatureReading{
   int32_t temps[max_number_of_thermometres];
@@ -51,7 +52,7 @@ class Thermo_Manager{
     uint8_t numSensors;
     OneWire TWire;
     uint8_t numPacketReadings=0;
-    etl::deque<temperatureReading, measurements_per_packet> packet;
+    etl::deque<temperatureReading, readings_per_measurement> packet;
     temperatureReading reading;
     etl::deque<temperatureReading, max_number_of_measurements> tmp_storage;
     

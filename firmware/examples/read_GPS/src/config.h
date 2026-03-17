@@ -14,7 +14,7 @@ static constexpr float    mps_2_kmph                       {3.6};
 
 
 // Sensor reading parameters
-static constexpr uint8_t  measurements_per_packet            {15};
+static constexpr uint8_t  readings_per_measurement            {15};
 static constexpr uint8_t  max_number_of_measurements         {80};
 static constexpr uint32_t max_GPS_read_time                  {3*min_2_s*s_2_ms};
 static constexpr uint32_t max_sensor_read_time               {40*s_2_ms};

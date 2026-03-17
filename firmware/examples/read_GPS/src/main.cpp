@@ -47,7 +47,7 @@ void loop() {
     if (success_gps_read == 0){
       // The last argument specifies if we want to log each GPS reading or
       // Just the filtered end value
-      gps_manager.performNReadings(measurements_per_packet,max_GPS_read_time, true);
+      gps_manager.performNReadings(readings_per_measurement,max_GPS_read_time, true);
       gps_manager.processReadings(true);
 
       // We should turn off the GPS post reading due to power consumption

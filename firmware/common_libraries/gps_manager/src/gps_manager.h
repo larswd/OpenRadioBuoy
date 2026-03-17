@@ -30,6 +30,13 @@ struct DateInfo{
   bool valid;
 };
 
+// Pin config. Do not change unless you have rewired the OLB
+static constexpr uint8_t  GPS_RX_PIN                     {PC0};
+static constexpr uint8_t  GPS_TX_PIN                     {PC1};
+static constexpr uint8_t  GPS_SLEEP_PIN                  {PA0};
+
+
+
 static constexpr uint32_t beaconMsgSize  {3 + sizeof(time_t) + 3*sizeof(uint32_t)};
 static constexpr uint8_t GPS_message_size {2+sizeof(time_t)+4*sizeof(uint32_t) + sizeof(uint16_t)};
 static constexpr uint8_t deployment_message_size {2 + sizeof(uint32_t) + sizeof(time_t) + 2*sizeof(uint32_t) + 1};
@@ -61,7 +68,7 @@ class GPS_Manager{
   private:
     uint8_t getGPSData(uint32_t max_wait_time);
     
-    etl::vector<GPS_Data, measurements_per_packet> packet;
+    etl::vector<GPS_Data, readings_per_measurement> packet;
     TinyGPSPlus gps;
     HardwareSerial ss;
     bool initialized = false;

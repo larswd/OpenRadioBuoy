@@ -231,7 +231,7 @@ void loop() {
     // success_gps_read is 0 if the buoy got a fix
     uint8_t success_gps_read = gps_manager.updateTimestamp(max_GPS_read_time, resync_RTC_using_GPS);
     if (success_gps_read == 0){
-      gps_manager.performNReadings(measurements_per_packet,max_GPS_read_time, log_every_reading);
+      gps_manager.performNReadings(readings_per_measurement,max_GPS_read_time, log_every_reading);
       gps_manager.processReadings(true);
 
       // We should turn off the GPS post reading due to power consumption

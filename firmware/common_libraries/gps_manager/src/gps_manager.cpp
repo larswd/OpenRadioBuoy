@@ -80,7 +80,7 @@ uint8_t GPS_Manager::performNReadings(uint8_t N, uint32_t max_wait_time, bool lo
  
   int8_t counter = 0;
   uint32_t start = millis();
-  if (N > measurements_per_packet){
+  if (N > readings_per_measurement){
     if (debug_serial){
       Serial.println(F("N is larger than max value. Setting N equal to max value"));
     }
@@ -88,7 +88,7 @@ uint8_t GPS_Manager::performNReadings(uint8_t N, uint32_t max_wait_time, bool lo
   if (logEveryReading){
     sd_writer.logString("t:lat:lng:vel:dir");
   }
-  uint8_t numReadings = min(N, measurements_per_packet);
+  uint8_t numReadings = min(N, readings_per_measurement);
   while( (counter < numReadings) && (millis() - start < max_wait_time)){
     updateTimestamp(max_wait_time, false);
     getGPSData(min(watchdog_wait_time/2, max_wait_time - (millis() - start)));
@@ -202,7 +202,7 @@ void GPS_Manager::processReadings(bool fullProcessingToggle){
   */
 
   // Storage variables
-  etl::vector<uint32_t, measurements_per_packet> int32vals;
+  etl::vector<uint32_t, readings_per_measurement> int32vals;
 
   // As it is, afaik, not possible to iterate over struct variables
   // We instead have to perform the iteration though code repetition
