@@ -251,11 +251,17 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
   */
   
   changeFrequency(LoRa_freq_send);
-  byte handshake[2 + sizeof(baseStationID) + sizeof(uint32_t)];
-  handshake[0] = 'U';
-  msg_insert_uint(handshake, WiO_ID, 1, 2 + sizeof(baseStationID) + sizeof(WiO_ID), true);
-  handshake[sizeof(handshake) - 2] = baseStationID;
-  handshake[sizeof(handshake) - 1] = 'E';
+
+
+  // Create handshake message
+  byte handshake[2 + sizeof(baseStationID) + sizeof(WiO_ID)];
+  uint8_t offset = 0;
+  handshake[offset++] = 'U';
+  msg_insert_uint(handshake, WiO_ID, offset, sizeof(handshake), offset, true);
+  handshake[offset++] = baseStationID;
+  handshake[offset++] = 'E';
+
+  // Transmit handshake message and wait for confirmation
   radio.startTransmit(handshake, sizeof(handshake));
   if (debug_serial){
     Serial.println("Handshake sent to base station!");
@@ -342,21 +348,25 @@ void LoRa_Transceiver::transmitFinished(uint8_t packetsLeft){
     zzzz is the amount of time the buoy will await instructions from the base station
     e indicates that the buoy has crashed since last transmission
   */
+
   byte endmessage[10];
-  endmessage[0] = 'E';
-  endmessage[1] = 'M';
-  endmessage[2] = msgCounter;
-  endmessage[3] = packetsLeft;
+  uint8_t offset=0;
+  endmessage[offset++] = 'E';
+  endmessage[offset++] = 'M';
+  endmessage[offset++] = msgCounter;
+  endmessage[offset++] = packetsLeft;
 
   uint32_t wait_time = max_radio_wait_time;
-  msg_insert_uint(endmessage, max_radio_wait_time, 4,10,true);
+  msg_insert_uint(endmessage, max_radio_wait_time, offset, 10, offset, true);
+
   IWatchdog.reload();
   if (IWatchdog.isReset(true)){
-    endmessage[8] = 1;
+    endmessage[offset++] = 1;
   } else {
-    endmessage[8] = 0;
+    endmessage[offset++] = 0;
   }
-  endmessage[9] = 'E';
+  endmessage[offset++] = 'E';
+
   transmitB(endmessage, 10);
   baseStationID = 0;
   available = false;
@@ -510,31 +520,15 @@ Todo: Use parser utils
 */
 void LoRa_Transceiver::create_update_message(FrequencyMessage frequency_message)
 {
-  end_message[0] = 'B';
-  // end_message[1] = 'E';
-  // end_message[2] = change_freq;
-
-  uint32_t offset = 1;
-
-  end_message[offset] = frequency_message.update_frequency;
-  uint32_t freq_tmp = frequency_message.measurement_frequency;
-  msg_insert_uint<uint32_t>(end_message, freq_tmp, offset, end_message_size);
-  offset+=4;
-  end_message[offset] = frequency_message.adaptive_frequency;
-  offset++;
-
-  uint32_t period_tmp = frequency_message.measurement_frequency;
-  msg_insert_uint<uint32_t>(end_message, period_tmp, offset, end_message_size);
-  offset += sizeof(uint32_t);
-  
-  uint32_t target_length_tmp = frequency_message.target_length;
-  msg_insert_uint<uint32_t>(end_message, target_length_tmp, offset, end_message_size);
-  offset += sizeof(uint32_t);
-
-  uint32_t threshold_velocity_tmp = frequency_message.threshold_velocity;
-  msg_insert_uint<uint32_t>(end_message, threshold_velocity_tmp, offset, end_message_size);
-  offset += sizeof(uint32_t);
-  end_message[offset] = 'E';
+  uint8_t offset = 0;
+  end_message[offset++] = 'B';
+  end_message[offset++] = frequency_message.update_frequency;
+  msg_insert_uint<uint32_t>(end_message, frequency_message.measurement_frequency, offset, end_message_size, offset);
+  end_message[offset++] = frequency_message.adaptive_frequency;
+  msg_insert_uint<uint32_t>(end_message, frequency_message.measurement_frequency, offset, end_message_size, offset); //TODO_PIF PERIOD_TEMP?
+  msg_insert_uint<uint32_t>(end_message, frequency_message.target_length, offset, end_message_size, offset);
+  msg_insert_uint<uint32_t>(end_message, frequency_message.threshold_velocity, offset, end_message_size, offset);
+  end_message[offset++] = 'E';
 }
 
 //BST Utils
@@ -563,17 +557,16 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
 
   buoy.inrange = false;
 
-  // Transmit message and wait until ready
-
-  char msg_out[32];
-  // sprintf(msg_out,"Base station ID: %d", baseStationID);
+  // Create transmit message
   byte baseStationIDMsg[7];
-  baseStationIDMsg[0] = 'B';
-  baseStationIDMsg[1] = baseStationID;
-  
+  uint8_t offset = 0;
+  baseStationIDMsg[offset++] = 'B';
+  baseStationIDMsg[offset++] = baseStationID;
   uint32_t freq = (uint32_t) (LoRa_freq_receive*scale_factor);
-  msg_insert_uint(baseStationIDMsg, freq, 2, 7, true);
-  baseStationIDMsg[6] = 'E';
+  msg_insert_uint(baseStationIDMsg, freq, offset, 7, offset, true);
+  baseStationIDMsg[offset++] = 'E';
+
+  // Transmit message and wait until ready
   IWatchdog.reload();
   transmitB(baseStationIDMsg, sizeof(baseStationIDMsg));
   IWatchdog.reload();
@@ -623,15 +616,17 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
     // Else, send go ahead signal to buoy before switching back to receive mode
     changeFrequency(LoRa_freq_send);
 
+    // Create message
     byte final_handshake_msg[1 + sizeof(buoy.ID) + sizeof(baseStationID) + sizeof(listenTime) + 1];
-    final_handshake_msg[0] = 'B';
-    sd_writer.debugSerialPrintln("sending last message");
-    msg_insert_uint(final_handshake_msg, buoy.ID, 1, sizeof(final_handshake_msg), true);
-    final_handshake_msg[1 +sizeof(buoy.ID)] = baseStationID;
-    msg_insert_uint(final_handshake_msg, listenTime, 1 + sizeof(buoy.ID) + sizeof(baseStationID), sizeof(final_handshake_msg), true);
+    size_t msgSize = sizeof(final_handshake_msg);
+    offset = 0;
+    final_handshake_msg[offset++] = 'B';
+    msg_insert_uint(final_handshake_msg, buoy.ID, offset, msgSize, offset, true);
+    final_handshake_msg[offset++] = baseStationID;
+    msg_insert_uint(final_handshake_msg, listenTime, offset, msgSize, offset, true);
+    final_handshake_msg[offset++] = 'E';
 
     sd_writer.debugSerialPrintln("sending last message now");
-    final_handshake_msg[14] = 'E';
 
 
     for (uint8_t repetitions = 0; repetitions < 3; repetitions++){

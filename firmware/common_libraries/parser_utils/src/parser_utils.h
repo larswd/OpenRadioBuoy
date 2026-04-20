@@ -39,12 +39,13 @@ T msg_extract_uint(const byte *msg, uint8_t start, bool leftOrdering)
   return result;
 }
 
-template<typename T, std::size_t S> uint8_t msg_insert_uint(byte (&msg)[S], T number, uint8_t start, uint8_t msgSize, bool leftOrdering = true){
+template<typename T, std::size_t S> uint8_t msg_insert_uint(byte (&msg)[S], T number, uint8_t start, uint8_t msgSize, uint8_t& next_offset, bool leftOrdering = true){
   /*
     Error codes:
       0 - Number inserted correctly
       1 - Inserted number would exceed message buffer
   */
+
   // We construct the basis polynomial
   uint64_t fac = 1;
   
@@ -65,6 +66,10 @@ template<typename T, std::size_t S> uint8_t msg_insert_uint(byte (&msg)[S], T nu
       msg[(start + sizeof(T)) - (idx - start)-1] = beta;
     }
   }
+
+  // Update next offset
+  next_offset = start + sizeof(T);
+
   return 0;
 }
 
@@ -75,31 +80,36 @@ template<typename T, std::size_t S> uint8_t msg_insert_uint(byte (&msg)[S], T nu
   while:
     N1234 = -(1*256^3 + 2*256^2 + 3*256 + 4)
 */
-template<typename T, std::size_t S> uint8_t msg_insert_int(byte (&msg)[S], T number, uint8_t start, uint8_t msgSize, bool leftOrdering = true){
+template<typename T, std::size_t S> uint8_t msg_insert_int(byte (&msg)[S], T number, uint8_t start, uint8_t msgSize, uint8_t& next_offset, bool leftOrdering = true){
   /*
     Error codes:
       0 - Number inserted correctly
       1 - Inserted number would exceed message buffer
   */
+
   // We construct the basis polynomial
-  
   uint8_t state;
   if (start + sizeof(T) +1 > msgSize){
     return 1;
   }
+
+  next_offset=start+1; // We reserve one byte for the sign
+
   if (number > 0){
     msg[start] = 'P';
-    state = msg_insert_uint(msg, number, start+1, msgSize, leftOrdering);
+    state = msg_insert_uint(msg, number, next_offset, msgSize, next_offset, leftOrdering);
   } else if (number < 0){
     msg[start] = 'N';
-    state = msg_insert_uint(msg, abs(number), start+1, msgSize, leftOrdering);
+    state = msg_insert_uint(msg, abs(number), next_offset, msgSize, next_offset, leftOrdering);
   } else {
     msg[start] = 'P';
     for (uint8_t idx = 0; idx < sizeof(T); idx++){
       msg[start+idx+1] = 0;
     }
+    next_offset += sizeof(T);
     return 0;
   }
+
   return state;
 }
 

@@ -415,21 +415,25 @@ size_t Thermo_Manager::updateTransmitMessage(void){
     data from the temperatures array
 
   */
-  msgB[0] = 'T';
-  temperatureReading reading = temperatures.front();
-  msgB[3] = numSensors;
-  msg_insert_uint(msgB, reading.readingID, 1, thermo_message_size, true);
-  for (uint8_t sensor = 0; sensor < numSensors; sensor++){
-    msg_insert_int(msgB, reading.temps[sensor], 4 + (1 + sizeof(int32_t))*sensor,thermo_message_size,true);
-  }
-  
 
-  // 8 byte integer to byte array conversion
-  msg_insert_uint(msgB, reading.timestamp, 4 + numSensors*(sizeof(int32_t) +1), thermo_message_size,true);
+  temperatureReading reading = temperatures.front();
+
+  // Create message
+  uint8_t offset = 0;
+  msgB[offset++] = 'T';
+  msg_insert_uint(msgB, reading.readingID, offset, thermo_message_size, offset, true);
+  msgB[offset++] = numSensors;
   
-  msgB[4 + numSensors*(sizeof(int32_t)+1)  + sizeof(time_t)] = 'E';
+  for (uint8_t sensor = 0; sensor < numSensors; sensor++){
+    msg_insert_int(msgB, reading.temps[sensor], offset, thermo_message_size, offset, true);
+  }
+
+  msg_insert_uint(msgB, reading.timestamp, offset, thermo_message_size, offset, true);
+  msgB[offset++] = 'E';
+  
+  // Remove reading from queue and return message size
   temperatures.pop_front();
-  return 4 + numSensors*(sizeof(int32_t)+1) + sizeof(time_t);
+  return offset;
 }
 
 uint8_t Thermo_Manager::logReading(temperatureReading tempData){
@@ -438,17 +442,20 @@ uint8_t Thermo_Manager::logReading(temperatureReading tempData){
     TR[10t][10x]*numsensorsEnd
 
   */
+  uint8_t offset = 0;
   byte reading[2 + sizeof(tempData.readingID) + sizeof(tempData.timestamp) + max_number_of_thermometres*(1+sizeof(tempData.temps[0]))+ 1]; 
-  reading[0] = 'T';
-  reading[1] = 'R';
-  msg_insert_uint(reading, tempData.readingID, 2, sizeof(reading), true);
-  msg_insert_uint(reading, tempData.timestamp, 2 + sizeof(tempData.readingID), sizeof(reading), true);
+  size_t msg_size = sizeof(reading);
+
+  reading[offset++] = 'T';
+  reading[offset++] = 'R';
+  msg_insert_uint(reading, tempData.readingID, offset, msg_size, offset, true);
+  msg_insert_uint(reading, tempData.timestamp, offset, msg_size, offset, true);
   
   for (int i = 0; i < numSensors; i++){
-    msg_insert_int(reading, tempData.temps[i], 2 + sizeof(tempData.readingID) + sizeof(tempData.timestamp) + i*(1+sizeof(tempData.temps[0])), sizeof(reading));
+    msg_insert_int(reading, tempData.temps[i], offset, msg_size, offset, true);
   }
-  reading[2 + sizeof(tempData.readingID) + sizeof(tempData.timestamp) + numSensors*(1+sizeof(tempData.temps[0]))] = 'E';
-  uint8_t state = sd_writer.logByteArray(reading, sizeof(reading));
+  reading[offset++] = 'E';
+  uint8_t state = sd_writer.logByteArray(reading, msg_size);
   return state;
 }
 
