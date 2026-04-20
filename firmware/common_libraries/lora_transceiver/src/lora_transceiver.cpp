@@ -89,7 +89,7 @@ void LoRa_Transceiver::sendFinalMessage(FrequencyMessage frequency_message)
   sd_writer.debugByteArray(end_message, end_message_size);
   sd_writer.debugSerialPrintln("");
 
-  changeFrequency(LoRa_freq_send);
+  changeFrequency(send_frequency);
   radio.startTransmit(end_message, end_message_size);
   msgCounter++;
 }
@@ -99,6 +99,10 @@ void LoRa_Transceiver::changeFrequency(double f){
   /*
     This method restarts the radio with a new given frequency. 
   */
+
+  Serial.print("Changing frequency to: "); //PIF REMOVE
+  Serial.println(f); //PIF REMOVE
+
   state = radio.begin(f, LoRa_bw, LoRa_sf, LoRa_cr, (0x12), LoRa_power, 8,1.7, false);
   radio.setTCXO(1.7);
   radio.setDio1Action(setFlag);
@@ -107,6 +111,9 @@ void LoRa_Transceiver::changeFrequency(double f){
   IWatchdog.reload();
 }
 
+void LoRa_Transceiver::setDefaultSendFrequency(double freq){
+  send_frequency = freq;
+}
 
 void LoRa_Transceiver::listenByteArray(uint32_t max_wait_time)
 {
@@ -220,10 +227,10 @@ void LoRa_Transceiver::findBaseStation(uint32_t max_wait_time){
     */
     if (byte_msg.byteMsg[0] == 'B' && byte_msg.numBytes == 7 && byte_msg.byteMsg[6] == 'E'){
       baseStationID = byte_msg.byteMsg[1];
-      LoRa_freq_send = (float) msg_extract_uint<uint32_t>(byte_msg.byteMsg, 2, true);
+      send_frequency = (float) msg_extract_uint<uint32_t>(byte_msg.byteMsg, 2, true);
       
       //We scale it down to the correct value
-      LoRa_freq_send /= scale_factor;
+      send_frequency /= scale_factor;
     } else {
       baseStationID = 0;
     }
@@ -250,7 +257,7 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
     and commence data transmission.
   */
   
-  changeFrequency(LoRa_freq_send);
+  changeFrequency(send_frequency);
 
 
   // Create handshake message
@@ -308,7 +315,7 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
     
     IWatchdog.reload();
   }
-  changeFrequency(LoRa_freq_send);
+  changeFrequency(send_frequency);
   operationDone = false;
   return available;
 }
@@ -553,7 +560,7 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
   // buoyInfo buoy;
 
   // Set radio in send mode
-  changeFrequency(LoRa_freq_send);
+  changeFrequency(send_frequency);
 
   buoy.inrange = false;
 
@@ -614,7 +621,7 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
     IWatchdog.reload();
     buoy.ID = buoyIDMessage.buoy_id;
     // Else, send go ahead signal to buoy before switching back to receive mode
-    changeFrequency(LoRa_freq_send);
+    changeFrequency(send_frequency);
 
     // Create message
     byte final_handshake_msg[1 + sizeof(buoy.ID) + sizeof(baseStationID) + sizeof(listenTime) + 1];

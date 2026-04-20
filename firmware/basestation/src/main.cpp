@@ -41,8 +41,8 @@ void setup()
   // {
   //   Serial.println("SD file closed");
   // }
-
   LORA.beginRadio(LoRa_freq_receive, LoRa_bw, LoRa_sf, LoRa_cr, LoRa_power);
+  LORA.setDefaultSendFrequency(LoRa_freq_send);
   LORA.getWiOID();
   LORA.computeReceptionChannel(num_LoRa_channels, LoRa_freq_receive_min, LoRa_freq_receive_max);
   // set up GSM connection

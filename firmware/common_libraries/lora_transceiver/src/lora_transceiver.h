@@ -40,7 +40,8 @@ class LoRa_Transceiver{
 
     void computeReceptionChannel(uint8_t num_LoRa_channels, double fmin, double fmax);
     void beginRadio(double freq, double bw, int sf, int cr, int power);
-  
+    void setDefaultSendFrequency (double freq);
+
     // Sending
     void transmit(String msg);
     void transmit(const char * msg);
@@ -97,7 +98,7 @@ class LoRa_Transceiver{
     ByteMessage receivedMessage;
     bool listening = false;
     bool sleeping = false;
-    float LoRa_freq_send;
+    float send_frequency;
     buoyInfo buoy;
 };
 
