@@ -99,10 +99,6 @@ void LoRa_Transceiver::changeFrequency(double f){
   /*
     This method restarts the radio with a new given frequency. 
   */
-
-  Serial.print("Changing frequency to: "); //PIF REMOVE
-  Serial.println(f); //PIF REMOVE
-
   state = radio.begin(f, LoRa_bw, LoRa_sf, LoRa_cr, (0x12), LoRa_power, 8,1.7, false);
   radio.setTCXO(1.7);
   radio.setDio1Action(setFlag);
@@ -536,7 +532,7 @@ void LoRa_Transceiver::create_update_message(FrequencyMessage frequency_message)
   end_message[offset++] = frequency_message.update_frequency;
   msg_insert_uint<uint32_t>(end_message, frequency_message.measurement_frequency, offset, end_message_size, offset);
   end_message[offset++] = frequency_message.adaptive_frequency;
-  msg_insert_uint<uint32_t>(end_message, frequency_message.measurement_frequency, offset, end_message_size, offset); //TODO_PIF PERIOD_TEMP?
+  msg_insert_uint<uint32_t>(end_message, frequency_message.measurement_frequency, offset, end_message_size, offset);
   msg_insert_uint<uint32_t>(end_message, frequency_message.target_length, offset, end_message_size, offset);
   msg_insert_uint<uint32_t>(end_message, frequency_message.threshold_velocity, offset, end_message_size, offset);
   end_message[offset++] = 'E';
