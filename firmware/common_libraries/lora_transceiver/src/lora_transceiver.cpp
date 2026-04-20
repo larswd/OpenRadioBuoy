@@ -557,7 +557,7 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
     Returning base station ID
   */
 
-  // buoyInfo buoy;
+  buoyInfo buoy = initEmptyBuoy();
 
   // Set radio in send mode
   changeFrequency(send_frequency);
@@ -613,36 +613,33 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
   if (!buoy.inrange)
   {
     sd_writer.debugSerialPrintln("No buoy found");
-    buoy.ID = 0;
     return buoy;
   }
-  else
-  {
-    IWatchdog.reload();
-    buoy.ID = buoyIDMessage.buoy_id;
-    // Else, send go ahead signal to buoy before switching back to receive mode
-    changeFrequency(send_frequency);
+    
+  IWatchdog.reload();
+  buoy.ID = buoyIDMessage.buoy_id;
+  // Else, send go ahead signal to buoy before switching back to receive mode
+  changeFrequency(send_frequency);
 
-    // Create message
-    byte final_handshake_msg[1 + sizeof(buoy.ID) + sizeof(baseStationID) + sizeof(listenTime) + 1];
-    size_t msgSize = sizeof(final_handshake_msg);
-    offset = 0;
-    final_handshake_msg[offset++] = 'B';
-    msg_insert_uint(final_handshake_msg, buoy.ID, offset, msgSize, offset, true);
-    final_handshake_msg[offset++] = baseStationID;
-    msg_insert_uint(final_handshake_msg, listenTime, offset, msgSize, offset, true);
-    final_handshake_msg[offset++] = 'E';
+  // Create message
+  byte final_handshake_msg[1 + sizeof(buoy.ID) + sizeof(baseStationID) + sizeof(listenTime) + 1];
+  size_t msgSize = sizeof(final_handshake_msg);
+  offset = 0;
+  final_handshake_msg[offset++] = 'B';
+  msg_insert_uint(final_handshake_msg, buoy.ID, offset, msgSize, offset, true);
+  final_handshake_msg[offset++] = baseStationID;
+  msg_insert_uint(final_handshake_msg, listenTime, offset, msgSize, offset, true);
+  final_handshake_msg[offset++] = 'E';
 
-    sd_writer.debugSerialPrintln("sending last message now");
+  sd_writer.debugSerialPrintln("sending last message now");
 
 
-    for (uint8_t repetitions = 0; repetitions < 3; repetitions++){
-      transmitB(final_handshake_msg, sizeof(final_handshake_msg));
-      delay(300);
-      waitUntilReady();
-    }
+  for (uint8_t repetitions = 0; repetitions < 3; repetitions++){
+    transmitB(final_handshake_msg, sizeof(final_handshake_msg));
+    delay(300);
+    waitUntilReady();
   }
-
+  
   changeFrequency(LoRa_freq_receive);
   delay(100);
   return buoy;
