@@ -41,6 +41,7 @@ class LoRa_Transceiver{
     void computeReceptionChannel(uint8_t num_LoRa_channels, double fmin, double fmax);
     void beginRadio(double freq, double bw, int sf, int cr, int power);
     void setDefaultSendFrequency (double freq);
+    void setBaseStationID(uint8_t id);
 
     // Sending
     void transmit(String msg);

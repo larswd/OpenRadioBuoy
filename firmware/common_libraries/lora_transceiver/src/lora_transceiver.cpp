@@ -115,6 +115,10 @@ void LoRa_Transceiver::setDefaultSendFrequency(double freq){
   send_frequency = freq;
 }
 
+void LoRa_Transceiver::setBaseStationID(uint8_t id){
+  baseStationID = id;
+}
+
 void LoRa_Transceiver::listenByteArray(uint32_t max_wait_time)
 {
   /*
@@ -557,12 +561,10 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
     Returning base station ID
   */
 
-  buoyInfo buoy = initEmptyBuoy();
+  buoy = initEmptyBuoy();
 
   // Set radio in send mode
   changeFrequency(send_frequency);
-
-  buoy.inrange = false;
 
   // Create transmit message
   byte baseStationIDMsg[7];
