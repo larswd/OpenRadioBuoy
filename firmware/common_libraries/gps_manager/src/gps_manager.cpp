@@ -177,15 +177,17 @@ void GPS_Manager::getDeploymentMessage(uint32_t buoy_ID){
     Serial.println("Writing deployment message!");
     delay(100);
   }
-  deploymentMessage[0] = 'U';
-  deploymentMessage[1] = 'I';
+  // Create message
+  uint8_t offset = 0;
+  deploymentMessage[offset++] = 'U';
+  deploymentMessage[offset++] = 'I';
   
-  deploymentMessage[deployment_message_size-1] = 'E';
-  msg_insert_uint(deploymentMessage, buoy_ID, 2, deployment_message_size, true);
-  msg_insert_uint(deploymentMessage, timestamp,2 + sizeof(buoy_ID), deployment_message_size, true);
-  msg_insert_uint(deploymentMessage, initial_fix.lat, 2 + sizeof(buoy_ID) + sizeof(timestamp), deployment_message_size, true);
-  msg_insert_uint(deploymentMessage, initial_fix.lng, 2 + sizeof(buoy_ID) + sizeof(timestamp) + sizeof(initial_fix.lat), deployment_message_size, true);
-
+  msg_insert_uint(deploymentMessage, buoy_ID, offset, deployment_message_size, offset, true);
+  msg_insert_uint(deploymentMessage, timestamp, offset, deployment_message_size, offset, true);
+  msg_insert_uint(deploymentMessage, initial_fix.lat, offset, deployment_message_size, offset, true);
+  msg_insert_uint(deploymentMessage, initial_fix.lng, offset, deployment_message_size, offset, true);
+  deploymentMessage[offset++] = 'E';
+  
   if (debug_serial){
     Serial.println("Removing deployment data");
     delay(100);
@@ -300,14 +302,18 @@ size_t GPS_Manager::updateTransmitMessage(){
     then remove the reading from the deque. 
   */
   GPS_Data gpsdata = GPSReadings.front();
-  msgB[0] = 'G';
-  msg_insert_uint(msgB, gpsdata.readingID, 1, GPS_message_size, true);
-  msg_insert_uint(msgB, gpsdata.lat, 1 + sizeof(gpsdata.readingID), GPS_message_size, true);
-  msg_insert_uint(msgB, gpsdata.lng, 1 + sizeof(gpsdata.readingID) + sizeof(gpsdata.lat), GPS_message_size, true);
-  msg_insert_uint(msgB, gpsdata.vel, 1 + sizeof(gpsdata.readingID) + 2*sizeof(gpsdata.lat), GPS_message_size, true);
-  msg_insert_uint(msgB, gpsdata.direction, 1 + sizeof(gpsdata.readingID) + 3*sizeof(gpsdata.lat), GPS_message_size, true);
-  msg_insert_uint(msgB, gpsdata.timestamp, 1 + sizeof(gpsdata.readingID) + 4*sizeof(gpsdata.lat), GPS_message_size, true);  
-  msgB[GPS_message_size-1] = 'E';
+
+  // Create transmit message
+  uint8_t offset = 0;
+  msgB[offset++] = 'G';
+  msg_insert_uint(msgB, gpsdata.readingID, offset, GPS_message_size, offset, true);
+  msg_insert_uint(msgB, gpsdata.lat, offset, GPS_message_size, offset, true);
+  msg_insert_uint(msgB, gpsdata.lng, offset, GPS_message_size, offset, true);
+  msg_insert_uint(msgB, gpsdata.vel, offset, GPS_message_size, offset, true);
+  msg_insert_uint(msgB, gpsdata.direction, offset, GPS_message_size, offset, true);
+  msg_insert_uint(msgB, gpsdata.timestamp, offset, GPS_message_size, offset, true);  
+  msgB[offset++] = 'E';
+  
   GPSReadings.pop_front();
   return GPS_message_size;
 }
@@ -318,14 +324,17 @@ uint8_t GPS_Manager::logReading(GPS_Data & data){
   */
 
   byte data_reading[1 + sizeof(data.readingID) + 4*sizeof(data.lat) + sizeof(data.timestamp) + 1];
-  data_reading[0] = 'G';
-  msg_insert_uint(data_reading, data.readingID, 1, sizeof(data_reading));
-  msg_insert_uint(data_reading, data.lat, 1 + sizeof(data.readingID) + 0*sizeof(data.lat), sizeof(data_reading), true);
-  msg_insert_uint(data_reading, data.lng, 1 + sizeof(data.readingID) + 1*sizeof(data.lat), sizeof(data_reading), true);
-  msg_insert_uint(data_reading, data.vel, 1 + sizeof(data.readingID) + 2*sizeof(data.lat), sizeof(data_reading), true);
-  msg_insert_uint(data_reading, data.direction, 1 + sizeof(data.readingID) + 3*sizeof(data.lat), sizeof(data_reading), true);
-  msg_insert_uint(data_reading, data.timestamp, 1 + sizeof(data.readingID) + 4*sizeof(data.lat), sizeof(data_reading), true);
-  data_reading[-1] = 'E';
+  size_t data_reading_size = sizeof(data_reading);
+
+  uint8_t offset = 0;
+  data_reading[offset++] = 'G';
+  msg_insert_uint(data_reading, data.readingID, offset, data_reading_size, offset, true);
+  msg_insert_uint(data_reading, data.lat, offset, data_reading_size, offset, true);
+  msg_insert_uint(data_reading, data.lng, offset, data_reading_size, offset, true);
+  msg_insert_uint(data_reading, data.vel, offset, data_reading_size, offset, true);
+  msg_insert_uint(data_reading, data.direction, offset, data_reading_size, offset, true);
+  msg_insert_uint(data_reading, data.timestamp, offset, data_reading_size, offset, true);
+  data_reading[offset++] = 'E';
   
   uint8_t state = sd_writer.logByteArray(data_reading, sizeof(data_reading));
   return state;
@@ -407,13 +416,14 @@ void GPS_Manager::getMeasurementFromFile(void){
 
 
 void GPS_Manager::updateBeaconMsg(uint32_t WiO_ID){
-  beaconMsg[0] = 'U';
-  beaconMsg[1] = 'R';
-  msg_insert_uint(beaconMsg, currentPosition.timestamp, 2, beaconMsgSize, true);
-  msg_insert_uint(beaconMsg, currentPosition.lat, 2 + sizeof(time_t), beaconMsgSize, true);
-  msg_insert_uint(beaconMsg, currentPosition.lng, 2 + sizeof(time_t) + sizeof(uint32_t), beaconMsgSize, true);
-  msg_insert_uint(beaconMsg, WiO_ID, 2 + sizeof(time_t) + 2*sizeof(uint32_t), beaconMsgSize, true);
-  beaconMsg[beaconMsgSize -1] = 'E';
+  uint8_t offset = 0;
+  beaconMsg[offset++] = 'U';
+  beaconMsg[offset++] = 'R';
+  msg_insert_uint(beaconMsg, currentPosition.timestamp, offset, beaconMsgSize, offset, true);
+  msg_insert_uint(beaconMsg, currentPosition.lat, offset, beaconMsgSize, offset, true);
+  msg_insert_uint(beaconMsg, currentPosition.lng, offset, beaconMsgSize, offset, true);
+  msg_insert_uint(beaconMsg, WiO_ID, offset, beaconMsgSize, offset, true);
+  beaconMsg[offset++] = 'E';
 }
 
 
