@@ -183,6 +183,193 @@ void setup() {
 
 }
 
+void task_measure_gps_temp() {
+
+  // Measure time!
+  unsigned long measurement_start = millis();
+
+  if (debug_LED_enabled){
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
+
+  // Wake up sensors
+  gps_manager.begin(GPS_baud);
+  thermo_manager.wake();
+  IWatchdog.reload();
+
+  char logname[25];
+  sprintf(logname, "readings/reading%05d.txt", sd_writer.logCount);
+  
+  if (!sd_writer.active){
+    sd_writer.begin();
+  }
+  sd_writer.startLogging(logname);
+  IWatchdog.reload();
+
+  // We read each sensor
+  if (debug_serial){
+    Serial.println("Reading sensors");
+    Serial.println(gps_manager.iterations);
+    delay(100);
+  }
+  
+  // success_gps_read is 0 if the buoy got a fix
+  uint8_t success_gps_read = gps_manager.updateTimestamp(max_GPS_read_time, resync_RTC_using_GPS);
+  if (success_gps_read == 0){
+    gps_manager.performNReadings(readings_per_measurement,max_GPS_read_time, log_every_reading);
+    gps_manager.processReadings(true);
+
+    // We should turn off the GPS post reading due to power consumption
+    gps_manager.shutdownGPS();
+
+    thermo_manager.takeReadings(max_sensor_read_time, gps_manager.timestamp, log_every_reading);
+    thermo_manager.processReadings();
+
+
+    IWatchdog.reload();
+    // We update the measurements period to reflect the new motion paradigme
+    if (enable_motion_detection){
+      LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity, maximal_measurement_period, minimal_measurement_period);
+    }
+  } else {
+    // If no fix was found, we skip this measurement and hope for better luck the next time around. 
+    gps_manager.shutdownGPS();
+  }
+  // Turning off remaining sensors
+  sleep_cycles_measurement = 0;
+  measurement_timer = millis_time_corrected(sleep_cycles_measurement);
+  thermo_manager.sleep();
+  sd_writer.closeLog();
+  IWatchdog.reload();
+
+  // Turn off LED
+  if (debug_LED_enabled){
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+
+}
+  
+
+void task_transmit() {
+
+  if (debug_serial){
+    Serial.println("Looking for base station");
+  }
+
+  if (debug_LED_enabled){
+    for (int i = 0; i < 3; i++){
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(800);
+      digitalWrite(LED_BUILTIN, HIGH);
+      IWatchdog.reload();
+    }
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+  
+  char logname[30];
+  sprintf(logname, "messages/transmission%05d.txt", LORA.msgCounter);
+
+  if (!sd_writer.active){
+    sd_writer.begin();
+  }
+
+  sd_writer.startLogging(logname);
+  IWatchdog.reload();
+  LORA.wakeUp();
+  sd_writer.logString("Looking for base station");
+
+  // Handshake
+  if (perform_handshake){
+    if (LORA.connectToBaseStation(max_radio_fix_look_time, max_radio_wait_time)){
+    sd_writer.logString("Hands shaked");
+    } else {
+    sd_writer.logString("No base station found");
+    } 
+    delay(send_delay_after_handshake);
+  } else {
+      // We do not check if a base station is present
+      LORA.available = true;
+      LORA.listenTime = 60*s_2_ms;
+  }
+
+  Message_Data message_data;
+  sd_writer.logString("Transmitting data\n--------\n");
+
+  // We dump as much information as possible to the base station
+  // In the time period alloted to us
+  while (LORA.available && (thermo_manager.temperatures.size() > 0)){
+
+    // GPS data
+    if (debug_serial){
+        Serial.print("Sending G: "); Serial.print(GPS_message_size); Serial.println(" bytes");
+    }
+    
+    gps_manager.updateTransmitMessage();
+    message_data = LORA.sendData(gps_manager.msgB, GPS_message_size, 10000);
+    delay(500);
+
+    sd_writer.logByteArray(gps_manager.msgB, GPS_message_size);
+    sd_writer.logSignalInfo(message_data.RSSI, message_data.SNR);
+
+    // Thermometer data
+    if (debug_serial){ Serial.print("Sending T: "); Serial.print(thermo_message_size); Serial.println(" bytes");}
+
+    thermo_manager.updateTransmitMessage();
+    message_data = LORA.sendData(thermo_manager.msgB, thermo_message_size, 10000);
+    IWatchdog.reload();
+
+    delay(500);
+    sd_writer.logByteArray(thermo_manager.msgB, thermo_message_size);
+    sd_writer.logSignalInfo(message_data.RSSI, message_data.SNR);
+
+    delay(200);
+    LORA.packet_count++;
+    IWatchdog.reload();
+
+    if (debug_serial){
+      Serial.print("Available: ");
+      Serial.println(LORA.available);
+      Serial.print("Num packets left: ");
+      Serial.println(thermo_manager.temperatures.size());
+    }
+
+    delay(500);
+  }
+  
+  // Wrap up transmission, wait for base station instructions
+  if (LORA.available){
+    LORA.transmitFinished(thermo_manager.temperatures.size());
+    if (enable_baseStation_parameter_updates){
+      // We listen for new parameters
+      LORA.receiveInstructions();
+
+      // Then we listen for which measurements to add back to memory from 
+      // SD card - TBD
+      //LORA.receiveDesiredMeasrements();
+      //sd_writer.fetchRequestedMeasurements(LORA.measurementTargets);
+    }
+    LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity, maximal_measurement_period, minimal_measurement_period);
+
+  }
+  
+  sd_writer.logString("Transmission done");
+  sd_writer.closeLog();
+
+  sleep_cycles_transmission = 0;
+  measurement_timer = millis();
+  LORA.lastTransmission = millis();
+  LORA.sleep();
+
+}
+
+void task_beacon(){
+    LORA.wakeUp();
+    gps_manager.updateBeaconMsg(LORA.WiO_ID);
+    LORA.transmitBeaconMessage(gps_manager.beaconMsg, beaconMsgSize);
+    sleep_cycles_beacon = 0;
+    beacon_timer        = millis();
+    LORA.sleep();
+}
 
 void loop() {
   /*
@@ -191,7 +378,6 @@ void loop() {
   IWatchdog.reload();
   bool disable_sensors = false;
 
-  
   if (debug_serial){
     Serial.begin(serial_baud);
     delay(100);
@@ -199,178 +385,25 @@ void loop() {
 
   }
 
-  // Measurement loop
+  // Measurement loop (temperature and GPS)
   if (millis_time_corrected(sleep_cycles_measurement) - measurement_timer > LORA.measurement_period){
-    if (debug_LED_enabled){
-      digitalWrite(LED_BUILTIN, HIGH);
-    }
-    gps_manager.begin(GPS_baud);
-    thermo_manager.wake();
-    IWatchdog.reload();
-    char logname[25];
-    sprintf(logname, "readings/reading%05d.txt", sd_writer.logCount);
-    
-    if (!sd_writer.active){
-      sd_writer.begin();
-    }
-    sd_writer.startLogging(logname);
-    IWatchdog.reload();
-
-    // We read each sensor
-    if (debug_serial){
-      Serial.println("Reading sensors");
-      Serial.println(gps_manager.iterations);
-      delay(100);
-    }
-    
-    // success_gps_read is 0 if the buoy got a fix
-    uint8_t success_gps_read = gps_manager.updateTimestamp(max_GPS_read_time, resync_RTC_using_GPS);
-    if (success_gps_read == 0){
-      gps_manager.performNReadings(readings_per_measurement,max_GPS_read_time, log_every_reading);
-      gps_manager.processReadings(true);
-
-      // We should turn off the GPS post reading due to power consumption
-      gps_manager.shutdownGPS();
-
-      thermo_manager.takeReadings(max_sensor_read_time, gps_manager.timestamp, log_every_reading);
-      thermo_manager.processReadings();
- 
-
-      IWatchdog.reload();
-      // We update the measurements period to reflect the new motion paradigme
-      if (enable_motion_detection){
-        LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity, maximal_measurement_period, minimal_measurement_period);
-      }
-    } else {
-      // If no fix was found, we skip this measurement and hope for better luck the next time around. 
-      gps_manager.shutdownGPS();
-    }
-    // Turning off remaining sensors
-    sleep_cycles_measurement = 0;
-    measurement_timer = millis_time_corrected(sleep_cycles_measurement);
-    thermo_manager.sleep();
-    sd_writer.closeLog();
-    IWatchdog.reload();
+      task_measure_gps_temp();
   }
   
   // Transmission protocol
   if ((millis_time_corrected(sleep_cycles_transmission) - LORA.lastTransmission > minimal_transmission_period) && 
       (gps_manager.GPSReadings.size() > packet_count_send_treshold)) {  
-    if (debug_serial){
-      Serial.println("Looking for base station");
-    }
-    if (debug_LED_enabled){
-      for (int i = 0; i < 3; i++){
-        digitalWrite(LED_BUILTIN, LOW);
-        delay(800);
-        digitalWrite(LED_BUILTIN, HIGH);
-        IWatchdog.reload();
-      }
-      digitalWrite(LED_BUILTIN, LOW);
-    }
-    char logname[30];
-    sprintf(logname, "messages/transmission%05d.txt", LORA.msgCounter);
-
-    if (!sd_writer.active){
-      sd_writer.begin();
-    }
-
-    sd_writer.startLogging(logname);
-    IWatchdog.reload();
-    LORA.wakeUp();
-    sd_writer.logString("Looking for base station");
-    if (perform_handshake){
-
-      if (LORA.connectToBaseStation(max_radio_fix_look_time, max_radio_wait_time)){
-      sd_writer.logString("Hands shaked");
-    } else {
-      sd_writer.logString("No base station found");
-    }
-
-      delay(send_delay_after_handshake);
-    } else {
-      // We do not check if a base station is present
-      LORA.available = true;
-      LORA.listenTime = 60*s_2_ms;
-    }
-
-    Message_Data message_data;
-    sd_writer.logString("Transmitting data\n--------\n");
-
-    // We dump as much information as possible to the base station
-    // In the time period alloted to us
-    while (LORA.available && (thermo_manager.temperatures.size() > 0)){
-      gps_manager.updateTransmitMessage();
-      message_data = LORA.sendData(gps_manager.msgB, GPS_message_size, 10000);
-      delay(500);
-
-      sd_writer.logByteArray(gps_manager.msgB, GPS_message_size);
-      sd_writer.logSignalInfo(message_data.RSSI, message_data.SNR);
-
-      thermo_manager.updateTransmitMessage();
-      message_data = LORA.sendData(thermo_manager.msgB, thermo_message_size, 10000);
-      IWatchdog.reload();
-
-      delay(500);
-      sd_writer.logByteArray(thermo_manager.msgB, thermo_message_size);
-      sd_writer.logSignalInfo(message_data.RSSI, message_data.SNR);
-
-      delay(200);
-      LORA.packet_count++;
-      IWatchdog.reload();
-      if (debug_serial){
-        Serial.print("Available: ");
-        Serial.println(LORA.available);
-        Serial.print("Num packets left: ");
-        Serial.println(thermo_manager.temperatures.size());
-      }
-
-      delay(500);
-    }
-    
-    // Wrap up transmission, wait for base station instructions
-    if (LORA.available){
-      LORA.transmitFinished(thermo_manager.temperatures.size());
-      if (enable_baseStation_parameter_updates){
-        // We listen for new parameters
-        LORA.receiveInstructions();
-
-        // Then we listen for which measurements to add back to memory from 
-        // SD card - TBD
-        //LORA.receiveDesiredMeasrements();
-        //sd_writer.fetchRequestedMeasurements(LORA.measurementTargets);
-      }
-      LORA.updateMeasurementFrequency(gps_manager.current_buoy_velocity, maximal_measurement_period, minimal_measurement_period);
-
-    }
-    
-    if (debug_serial){
-      Serial.println("Transmission done");
-    }
-    sd_writer.logString("Transmission done");
-    sd_writer.closeLog();
-
-    sleep_cycles_transmission = 0;
-    measurement_timer = millis();
-    LORA.sleep();
- 
+        task_transmit();
   }
-
-  Serial.println("\n Succesfull iteration, starting to log\n");
-
 
   // Recovery protocol
   if ((millis_time_corrected(sleep_cycles_beacon) - beacon_timer > beacon_ping_period) && (enable_recovery_beacon)){
-    LORA.wakeUp();
-    gps_manager.updateBeaconMsg(LORA.WiO_ID);
-    LORA.transmitBeaconMessage(gps_manager.beaconMsg, beaconMsgSize);
-    sleep_cycles_beacon = 0;
-    beacon_timer        = millis();
-    LORA.sleep();
+    task_beacon();
   }
-  Serial.println("Logging finished");
 
   if (debug_serial){
+    Serial.println("\n Succesfull iteration, starting to log\n");
+    Serial.println("Logging finished");
     Serial.println(F("Shutting down"));
     delay(100);
     Serial.end();
