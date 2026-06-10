@@ -26,7 +26,7 @@ static uint32_t iterations_counter = 0;
 
 
 uint32_t millis_time_corrected(uint32_t sleep_cycles){
-  return millis() + sleep_cycles*watchdog_wait_time/2;
+  return millis() + sleep_cycles*sleep_time;
 }
 
 void setup() {
@@ -397,7 +397,7 @@ void loop() {
     Serial.end();
   }
   
-  // We sleep for half the watch dog wait time before waking up to refresh the watchdog
+  // We sleep for "sleep_time" before waking up to refresh the watchdog
   IWatchdog.reload();
   sleep_cycles_measurement++;
   sleep_cycles_transmission++;
