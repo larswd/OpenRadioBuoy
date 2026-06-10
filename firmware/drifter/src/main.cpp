@@ -68,12 +68,12 @@ void setup() {
   LORA.getWiOID();
   if (LORA.state == RADIOLIB_ERR_NONE){
     if (debug_serial){
-      Serial.println(F("Radio functional!!!")); 
+      Serial.println(F("Radio functional")); 
     }
     sd_writer.logString("Radio functional");
   } else {
     if (debug_serial){
-      Serial.println(F("Radio failed to start. Freezing"));
+      Serial.println(F("Radio failed to start. Freezing sensor."));
     }
     sd_writer.logString("Radio failed to start. Freezing sensor.");
     while(1);
@@ -93,7 +93,7 @@ void setup() {
 
 
   if (debug_serial){
-    Serial.println(F("Beginning gps"));
+    Serial.println(F("Beginning GPS"));
     sd_writer.logString("Beginning GPS");
   }
   IWatchdog.reload();
