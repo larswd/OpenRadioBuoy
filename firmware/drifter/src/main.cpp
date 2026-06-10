@@ -67,14 +67,8 @@ void setup() {
   LORA.beginRadio(LoRa_freq_receive, LoRa_bw, LoRa_sf, LoRa_cr, LoRa_power);
   LORA.getWiOID();
   if (LORA.state == RADIOLIB_ERR_NONE){
-    if (debug_serial){
-      Serial.println(F("Radio functional")); 
-    }
     sd_writer.logString("Radio functional");
   } else {
-    if (debug_serial){
-      Serial.println(F("Radio failed to start. Freezing sensor."));
-    }
     sd_writer.logString("Radio failed to start. Freezing sensor.");
     while(1);
   }
@@ -91,11 +85,8 @@ void setup() {
   */
   etl::error_handler::set_callback<etl_error_func>();
 
+  sd_writer.logString("Beginning GPS");
 
-  if (debug_serial){
-    Serial.println(F("Beginning GPS"));
-    sd_writer.logString("Beginning GPS");
-  }
   IWatchdog.reload();
   gps_manager.begin(GPS_baud);
 
