@@ -48,6 +48,7 @@ class GPS_Manager{
     DateInfo date = {0,0,0,false};
     etl::deque<GPS_Data, max_number_of_measurements> GPSReadings;
     
+    uint8_t setTimeFromGps();
     uint8_t updateTimestamp(uint32_t max_wait_time, bool refreshGPStime);
     void getDeploymentMessage(uint32_t buoy_ID);
     time_t timestamp = 0;

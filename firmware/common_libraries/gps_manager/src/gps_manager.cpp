@@ -17,55 +17,64 @@ void GPS_Manager::begin(float baudrate){
   currentPosition = {0,0,0,0,0,0};
 }
 
-uint8_t GPS_Manager::updateTimestamp(uint32_t max_wait_time, bool refreshGPStime){
-    /*
-      Read date from GPS. Error codes are returned if the 
-      GPS is called while not initialized. 
-      Returns 2 if no fix was found
-    */
-  if (refreshGPStime){
-    uint8_t hour, minute, second;
-    if (!enable_GPS){
-      date.year  = 2025;
-      date.month = 1;
-      date.day   = 17;
-      hour = 14;
-      minute = 21;
-      second = 0;
-      date.valid = true;
-    } else {
-      if (!initialized){
-        return 1;
-      }
-      uint32_t searchStart = millis();
-      // Error code 1 removed for debugging purposes
-      uint16_t iteration_counter = 0;
-      
-      // We try to get a fix to get RTC
-      while ((gps.date.isValid() == false) || (gps.time.isValid() == false) && (millis() - searchStart < max_GPS_read_time)){
-        while(ss.available() > 0){
-          gps.encode(ss.read());
-        }
-        if (iteration_counter > 2000){
-          IWatchdog.reload();
-          iteration_counter = 0;
-        }
-        iteration_counter++;
-        if ((millis() - searchStart > max_GPS_read_time) && gps.time.isValid() == false){
-          return 2;
-        }
-      }
-      hour = gps.time.hour();
-      minute = gps.time.minute();
-      second = gps.time.second();
-      date.year  = gps.date.year();
-      date.month = gps.date.month();
-      date.day   = gps.date.day();
-      date.valid = true;
+uint8_t GPS_Manager::setTimeFromGps(){
+
+  uint8_t hour, minute, second;
+  if (!enable_GPS){
+    date.year  = 2025;
+    date.month = 1;
+    date.day   = 17;
+    hour = 14;
+    minute = 21;
+    second = 0;
+    date.valid = true;
+  } else {
+    if (!initialized){
+      return 1;
     }
-    // We set the RTC using the GPS measurements
-    setTime(hour, minute, second, date.day, date.month, date.year);
+    uint32_t searchStart = millis();
+    
+    // Error code 1 removed for debugging purposes
+    uint16_t iteration_counter = 0;
+    
+    // We try to get a fix to get RTC
+    while ((gps.date.isValid() == false) || (gps.time.isValid() == false) && (millis() - searchStart < max_GPS_read_time)){
+      while(ss.available() > 0){
+        gps.encode(ss.read());
+      }
+      if (iteration_counter > 2000){
+        IWatchdog.reload();
+        iteration_counter = 0;
+      }
+      iteration_counter++;
+      if ((millis() - searchStart > max_GPS_read_time) && gps.time.isValid() == false){
+        return 2;
+      }
+    }
+    hour = gps.time.hour();
+    minute = gps.time.minute();
+    second = gps.time.second();
+    date.year  = gps.date.year();
+    date.month = gps.date.month();
+    date.day   = gps.date.day();
+    date.valid = true;
   }
+  // We set the RTC using the GPS measurements
+  setTime(hour, minute, second, date.day, date.month, date.year);
+
+  return 0;
+}
+
+
+uint8_t GPS_Manager::updateTimestamp(uint32_t max_wait_time, bool refreshGPStime){
+
+  if (refreshGPStime){
+    uint8_t rc = setTimeFromGps();
+    if (rc != 0){
+      return rc;
+    } 
+  }
+
   // Then update the timestamp
   timestamp = now();
   return 0;
@@ -189,7 +198,7 @@ void GPS_Manager::getDeploymentMessage(uint32_t buoy_ID){
   deploymentMessage[offset++] = 'E';
   
   if (debug_serial){
-    Serial.println("Removing deployment data");
+    Serial.println("Removing deployment data (gps)");
     delay(100);
   }
   gps_manager.GPSReadings.pop_back();
@@ -372,12 +381,13 @@ void GPS_Manager::getMeasurementFromFile(void){
             for (uint8_t index = 0; index < GPS_message_size; index++){
               sscanf(tmpHolder, "%db%s", &filteredData[index], tmpHolder);
             }
-            readData.readingID = msg_extract_uint<uint16_t>(filteredData, 1, true);
-            readData.lat       = msg_extract_uint<uint32_t>(filteredData, 1 + sizeof(readData.readingID) + 0*sizeof(readData.lat), true);
-            readData.lng       = msg_extract_uint<uint32_t>(filteredData, 1 + sizeof(readData.readingID) + 1*sizeof(readData.lat), true);
-            readData.vel       = msg_extract_uint<uint32_t>(filteredData, 1 + sizeof(readData.readingID) + 2*sizeof(readData.lat), true);
-            readData.direction = msg_extract_uint<uint32_t>(filteredData, 1 + sizeof(readData.readingID) + 3*sizeof(readData.lat), true);
-            readData.timestamp = msg_extract_uint<uint64_t>(filteredData, 1 + sizeof(readData.readingID) + 4*sizeof(readData.lat), true); 
+            uint8_t offset = 1;
+            readData.readingID = msg_extract_uint<uint16_t>(filteredData, offset, true, offset);
+            readData.lat       = msg_extract_uint<uint32_t>(filteredData, offset, true, offset);
+            readData.lng       = msg_extract_uint<uint32_t>(filteredData, offset, true, offset);
+            readData.vel       = msg_extract_uint<uint32_t>(filteredData, offset, true, offset);
+            readData.direction = msg_extract_uint<uint32_t>(filteredData, offset, true, offset);
+            readData.timestamp = msg_extract_uint<uint64_t>(filteredData, offset, true, offset);
 
 
             if (debug_serial){

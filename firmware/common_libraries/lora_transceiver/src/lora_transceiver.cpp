@@ -242,7 +242,8 @@ void LoRa_Transceiver::findBaseStation(uint32_t max_wait_time){
     */
     if (byte_msg.byteMsg[0] == 'B' && byte_msg.numBytes == 7 && byte_msg.byteMsg[6] == 'E'){
       baseStationID = byte_msg.byteMsg[1];
-      send_frequency = (float) msg_extract_uint<uint32_t>(byte_msg.byteMsg, 2, true);
+      uint8_t offset_freq = 2;
+      send_frequency = (float) msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_freq, true, offset_freq);
       
       //We scale it down to the correct value
       send_frequency /= scale_factor;
@@ -308,16 +309,18 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
       IWatchdog.reload();
       // Last format B + 4*id + BST_ID + 4*listenTime + E
       if (byte_msg.byteMsg[0] == 'B' && byte_msg.numBytes == 3 + 2*sizeof(uint32_t)){
-        uint32_t WiO_ID_received = msg_extract_uint<uint32_t>(byte_msg.byteMsg, 1,true);
-        bool matching_Bid = (baseStationID == byte_msg.byteMsg[1 + sizeof(WiO_ID)]);
-        bool matching_Uid = (WiO_ID == WiO_ID_received); 
+        uint8_t offset_hs = 1;
+        uint32_t WiO_ID_received = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_hs, true, offset_hs);
+        bool matching_Bid = (baseStationID == byte_msg.byteMsg[offset_hs]);
+        offset_hs++;
+        bool matching_Uid = (WiO_ID == WiO_ID_received);
         if (matching_Bid && matching_Uid){
-  
+
           if (debug_serial){
             Serial.println("Base station found!");
           }
 
-          listenTime = msg_extract_uint<uint32_t>(byte_msg.byteMsg, 1 + sizeof(WiO_ID) + sizeof(baseStationID),true);
+          listenTime = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_hs, true, offset_hs);
           if (debug_serial){
             Serial.print("Listen time: ");
             Serial.println(listenTime);
@@ -395,6 +398,7 @@ void LoRa_Transceiver::transmitFinished(uint8_t packetsLeft){
   IWatchdog.reload();
 }
 
+
 void LoRa_Transceiver::receiveDesiredMeasurementIDs(void){
   /*
     We wait for a dismissed signal from the base station,
@@ -420,13 +424,15 @@ void LoRa_Transceiver::receiveDesiredMeasurementIDs(void){
 
     if ((msg1 == 'B') && (byte_msg.numBytes == 15)){
       cleared = true;
-      base_measurement_period = msg_extract_uint<uint32_t>(byte_msg.byteMsg,1,true);
+      uint8_t offset_ri = 1;
+      base_measurement_period = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_ri, true, offset_ri);
       IWatchdog.reload();
 
-      if (byte_msg.byteMsg[5] == 1){
+      if (byte_msg.byteMsg[offset_ri] == 1){
+        offset_ri++;
         enable_motion_detection = true;
-        target_reading_distance = msg_extract_uint<uint32_t>(byte_msg.byteMsg,6,true);
-        motion_treshold       = msg_extract_uint<uint32_t>(byte_msg.byteMsg, 10, true);
+        target_reading_distance = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_ri, true, offset_ri);
+        motion_treshold         = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_ri, true, offset_ri);
       } else {
         enable_motion_detection = false;
       }
@@ -458,13 +464,15 @@ void LoRa_Transceiver::receiveInstructions(void){
     IWatchdog.reload();
     if ((msg1 == 'B') && (byte_msg.numBytes == 15)){
       cleared = true;
-      base_measurement_period = msg_extract_uint<uint32_t>(byte_msg.byteMsg,1,true);
+      uint8_t offset_ri2 = 1;
+      base_measurement_period = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_ri2, true, offset_ri2);
       IWatchdog.reload();
 
-      if (byte_msg.byteMsg[5] == 1){
+      if (byte_msg.byteMsg[offset_ri2] == 1){
+        offset_ri2++;
         enable_motion_detection = true;
-        target_reading_distance = msg_extract_uint<uint32_t>(byte_msg.byteMsg,6,true);
-        motion_treshold       = msg_extract_uint<uint32_t>(byte_msg.byteMsg, 10, true);
+        target_reading_distance = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_ri2, true, offset_ri2);
+        motion_treshold         = msg_extract_uint<uint32_t>(byte_msg.byteMsg, offset_ri2, true, offset_ri2);
       } else {
         enable_motion_detection = false;
       }
@@ -472,6 +480,7 @@ void LoRa_Transceiver::receiveInstructions(void){
     }
   }
 }
+
 
 void LoRa_Transceiver::updateMeasurementFrequency(uint32_t velocity, uint32_t max_period, uint32_t min_period){
   /*
@@ -617,17 +626,14 @@ buoyInfo LoRa_Transceiver::findBuoy(uint32_t max_wait_time)
 
   delay(100);
 
-  if (baseStationID == buoyIDMessage.base_station_ID)
-  {
-    buoy.inrange = true;
-  }
-
-  // If no response, exit
-  if (!buoy.inrange)
-  {
+  if (baseStationID != buoyIDMessage.base_station_ID){
     sd_writer.debugSerialPrintln("No buoy found");
     return buoy;
   }
+
+  // Set buoy ID and inrange flag
+  buoy.ID = buoyIDMessage.buoy_id;
+  buoy.inrange = true;
     
   IWatchdog.reload();
   buoy.ID = buoyIDMessage.buoy_id;
