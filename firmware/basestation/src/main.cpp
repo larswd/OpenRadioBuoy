@@ -202,7 +202,15 @@ void loop()
     IWatchdog.reload();
     sd_writer.debugSerialPrintln("handshake enabled");
     buoyInfo buoy = LORA.findBuoy(max_radio_fix_look_time);
-     sd_writer.debugSerialPrintln("still after searching for buoy");
+    
+    if (debug_serial){
+      if (buoy.inrange){
+        Serial.print("Buoy found with ID: ");
+        Serial.println(buoy.ID);
+      } else {
+        Serial.println("No buoy found");
+      }
+    }
 
     // GSM.sendMessage("loop in main");
     if (buoy.inrange)
@@ -242,6 +250,9 @@ void loop()
         {
           sd_writer.debugSerialPrint("Receiving message: ");
           sd_writer.debugSerialPrintln((char)LORA.byte_msg.byteMsg[0]);
+          
+          sd_writer.debugSerialPrint("Received message length: ");
+          sd_writer.debugSerialPrintln(LORA.byte_msg.numBytes);
 
           sd_writer.debugSerialPrint("Received message bytes: ");
           sd_writer.debugByteArray(LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);

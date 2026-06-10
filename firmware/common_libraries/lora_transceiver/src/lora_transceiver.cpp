@@ -105,6 +105,11 @@ void LoRa_Transceiver::changeFrequency(double f){
   listening = false;
   delay(200);
   IWatchdog.reload();
+
+   if (debug_serial){
+    Serial.print("Radio restarted at frequency: ");
+    Serial.println(f);
+  }
 }
 
 void LoRa_Transceiver::setDefaultSendFrequency(double freq){
@@ -162,6 +167,11 @@ void LoRa_Transceiver::listenByteArray(uint32_t max_wait_time)
     byte_msg.success = false;
     byte_msg.numBytes = 0;
   }
+
+  if (debug_serial)
+  {
+    Serial.println("Stopped listening");
+  }
 }
 
 
@@ -201,6 +211,11 @@ void LoRa_Transceiver::listen(uint32_t max_wait_time){
     }
   } else {
     string_msg.success = false;
+  }
+
+  if (debug_serial)
+  {
+    Serial.println("Stopped listening");
   }
 }
 
