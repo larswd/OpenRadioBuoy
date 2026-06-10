@@ -481,15 +481,16 @@ void Thermo_Manager::getMeasurementFromFile(void){
               sscanf(tmpHolder, "%db%s", &filteredData[index], tmpHolder);
             }
             
-            readData.readingID = msg_extract_uint<uint16_t>(filteredData, 2, true);
-            readData.timestamp = msg_extract_uint<uint64_t>(filteredData, 2 + sizeof(readData.readingID), true);
-            
+            uint8_t offset = 2;
+            readData.readingID = msg_extract_uint<uint16_t>(filteredData, offset, true, offset);
+            readData.timestamp = msg_extract_uint<uint64_t>(filteredData, offset, true, offset);
+
             for (uint8_t thermistor_idx = 0; thermistor_idx < numSensors; thermistor_idx++){
               // If the sign character is a P, assign a positive number, otherwise assign a negative number
-              uint8_t sign_index = 2 + sizeof(readData.readingID) + sizeof(readData.timestamp) + (1 + sizeof(readData.temps[0]))*thermistor_idx;
-              byte sign = filteredData[sign_index];
-              uint32_t extracted_temp =  msg_extract_uint<uint32_t>(filteredData, sign_index + 1, true);
-              readData.temps[thermistor_idx] = (sign == 80) ? extracted_temp : - extracted_temp; 
+              byte sign = filteredData[offset];
+              offset += sizeof(byte);
+              uint32_t extracted_temp = msg_extract_uint<uint32_t>(filteredData, offset, true, offset);
+              readData.temps[thermistor_idx] = (sign == 80) ? extracted_temp : -extracted_temp;
             }
 
             if (debug_serial){

@@ -29,18 +29,10 @@ void setup()
   Serial.println(base_station_ID);
 
   sd_writer.begin();
-  // if (!sd_writer.getStatus())
-  // {
-  //   Serial.println("SD opened");
-  // }
   sd_writer.startLogging("boot_info.txt");
   sd_writer.logString("Booting base station");
   sd_writer.closeLog();
 
-  // if (sd_closed)
-  // {
-  //   Serial.println("SD file closed");
-  // }
   LORA.beginRadio(LoRa_freq_receive, LoRa_bw, LoRa_sf, LoRa_cr, LoRa_power);
   LORA.setDefaultSendFrequency(LoRa_freq_send);
   LORA.setBaseStationID(base_station_ID);
@@ -199,10 +191,20 @@ void loop()
   else if (enable_handshake)
   {
     sd_writer.startDebugging(DEBUG_MODE_BUOY_COMM);
+    sd_writer.debugSerialPrintln("Write to SD card");
     IWatchdog.reload();
+
     sd_writer.debugSerialPrintln("handshake enabled");
     buoyInfo buoy = LORA.findBuoy(max_radio_fix_look_time);
-     sd_writer.debugSerialPrintln("still after searching for buoy");
+    
+    if (debug_serial){
+      if (buoy.inrange){
+        Serial.print("Buoy found with ID: ");
+        Serial.println(buoy.ID);
+      } else {
+        Serial.println("No buoy found");
+      }
+    }
 
     // GSM.sendMessage("loop in main");
     if (buoy.inrange)
@@ -212,36 +214,21 @@ void loop()
       int pos = 0;
       uint32_t startListen = millis();
 
-      // IWatchdog.reload();
-      sd_writer.debugSerialPrintln("Write to SD card");
-      char filename[32];
-      // sprintf(filename, "transmissions/packet_%020d.txt", sd_writer.transmissionsCount); // TODO: Change to date queried from notehub
-      bool SD_fail = sd_writer.begin();
-      // sd_writer.startLogging(filename);
-
-      if (!SD_fail)
-      {
-        sd_writer.debugSerialPrintln("SD opened");
-        // sd_writer.debugSerialPrint("Status code: ");
-        // sd_writer.debugSerialPrintln(status);
-      }
-
       std::queue<BuoyMessage *> messageQueue;
 
       uint32_t listen_time_delta = 1000;
 
       while ((millis() - startListen) < (listen_time + listen_time_delta))
       {
-        sd_writer.debugSerialPrint("Remaining listening time: ");
-        sd_writer.debugSerialPrintln((listen_time + listen_time_delta) - (millis() - startListen));
-        // LORA.listenByteArray((listen_time + listen_time_delta) - (millis() - startListen));
-        
         // This should probably be a variable
         LORA.listenByteArray(10000);
         if (LORA.byte_msg.success)
         {
           sd_writer.debugSerialPrint("Receiving message: ");
           sd_writer.debugSerialPrintln((char)LORA.byte_msg.byteMsg[0]);
+          
+          sd_writer.debugSerialPrint("Received message length: ");
+          sd_writer.debugSerialPrintln(LORA.byte_msg.numBytes);
 
           sd_writer.debugSerialPrint("Received message bytes: ");
           sd_writer.debugByteArray(LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);
@@ -345,6 +332,10 @@ void loop()
             // GSM.syncMessages();
             break;
           }
+
+          sd_writer.debugSerialPrint("Remaining listening time: ");
+          sd_writer.debugSerialPrintln((listen_time + listen_time_delta) - (millis() - startListen));
+       
           sd_writer.debugSerialPrintln("");
         }
       }
