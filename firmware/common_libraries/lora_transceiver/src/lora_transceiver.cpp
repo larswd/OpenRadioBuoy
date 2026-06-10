@@ -135,6 +135,11 @@ void LoRa_Transceiver::listenByteArray(uint32_t max_wait_time)
   {
     radio.startReceive();
     listening = true;
+
+    if (debug_serial)
+    {
+      Serial.println("Started listening");
+    }
   }
   uint32_t listenTime = millis();
   while (!operationDone && (millis() - listenTime) < max_wait_time)
