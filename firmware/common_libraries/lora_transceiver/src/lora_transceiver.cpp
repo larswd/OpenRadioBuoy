@@ -338,6 +338,13 @@ bool LoRa_Transceiver::handshake(uint32_t max_wait_time){
   return available;
 }
 
+bool LoRa_Transceiver::connectToBaseStation(uint32_t find_timeout, uint32_t handshake_timeout) {
+    findBaseStation(find_timeout);
+    delay(200);
+    if (baseStationID == 0) return false;
+    handshake(handshake_timeout);
+    return available;
+}
 
 Message_Data LoRa_Transceiver::sendData(byte * message, uint8_t msgSize,  uint32_t message_send_time){
   /*

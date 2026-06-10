@@ -129,17 +129,7 @@ void setup() {
       We wait until we get a fix from a base station before proceeding.
       Allows us to make sure the buoy works before tossing it into the water. 
     */
-    while (LORA.available == false){
-
-      LORA.findBaseStation(max_radio_fix_look_time);
-      delay(200);
-
-      if (LORA.baseStationID == 0)
-        continue;      
-
-      LORA.handshake(max_radio_fix_look_time);
-      delay(300);
-
+    while (!LORA.connectToBaseStation(max_radio_fix_look_time, max_radio_fix_look_time)) {
       IWatchdog.reload();
     }
     
@@ -290,25 +280,14 @@ void loop() {
     LORA.wakeUp();
     sd_writer.logString("Looking for base station");
     if (perform_handshake){
-      LORA.findBaseStation(max_radio_fix_look_time);
-      delay(200);
-      if (LORA.baseStationID > 0){
-        LORA.handshake(max_radio_wait_time);
-      }
 
-      if (LORA.available){
-        if (debug_serial)
-          Serial.println("Hands shaked"); 
+      if (LORA.connectToBaseStation(max_radio_fix_look_time, max_radio_wait_time)){
+      sd_writer.logString("Hands shaked");
+    } else {
+      sd_writer.logString("No base station found");
+    }
 
-        sd_writer.logString("Hands shaked");
-      } else {
-        if (debug_serial) 
-          Serial.println("No base station found");
-
-        sd_writer.logString("No base station found");
-      }
-
-      delay(300);
+      delay(send_delay_after_handshake);
     } else {
       // We do not check if a base station is present
       LORA.available = true;
