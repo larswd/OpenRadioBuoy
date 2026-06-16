@@ -34,6 +34,7 @@ static constexpr uint32_t max_radio_wait_time            {40*s_2_ms};
 static constexpr uint8_t  max_message_length             {128};
 static constexpr uint32_t beacon_ping_period             {2*min_2_s*s_2_ms};
 static constexpr float    LoRa_freq_beacon               {868};
+static constexpr uint32_t send_delay_after_handshake     {1000};
 
 // Sensor reading parameters
 static constexpr uint8_t  readings_per_measurement            {15};

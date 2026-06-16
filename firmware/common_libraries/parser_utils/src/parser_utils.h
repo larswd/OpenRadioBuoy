@@ -8,7 +8,7 @@
 */
 
 template <typename T>
-T msg_extract_uint(const byte *msg, uint8_t start, bool leftOrdering)
+T msg_extract_uint(const byte *msg, uint8_t start, bool leftOrdering, uint8_t& next_offset)
 {
 
   // We construct the basis polynomial
@@ -20,7 +20,6 @@ T msg_extract_uint(const byte *msg, uint8_t start, bool leftOrdering)
       fac *= 256;
     }
   }
-
 
   // We convert from base 256 to base 10.
   T result = 0;
@@ -36,6 +35,8 @@ T msg_extract_uint(const byte *msg, uint8_t start, bool leftOrdering)
       fac *= 256;
     }
   }
+
+  next_offset = start + sizeof(T);
   return result;
 }
 

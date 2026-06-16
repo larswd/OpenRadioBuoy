@@ -62,6 +62,7 @@ class LoRa_Transceiver{
     // Handshake 
     void findBaseStation(uint32_t max_wait_time);
     bool handshake(uint32_t maxListenTime);
+    bool connectToBaseStation(uint32_t find_timeout, uint32_t handshake_timeout);
     void transmitFinished(uint8_t packetsLeft);
     
     // Transmission wrap up
