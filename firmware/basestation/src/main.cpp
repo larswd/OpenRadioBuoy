@@ -47,7 +47,7 @@ void setup()
   LORA.getWiOID();
   LORA.computeReceptionChannel(num_LoRa_channels, LoRa_freq_receive_min, LoRa_freq_receive_max);
   // set up GSM connection
-  //GSM.begin();
+  GSM.begin();
 
   uint32_t startListen = millis();
 
@@ -55,8 +55,8 @@ void setup()
   notecard_reset_start = millis();
   notecard_input_sync_start = millis();
 
-  //GSM.sendMessage("BST is restarted");
-  //GSM.syncMessages(false);
+  GSM.sendMessage("BST is restarted");
+  GSM.syncMessages(false);
 
   if (enable_watchdog){
     IWatchdog.begin(1000*watchdog_wait_time);
@@ -72,9 +72,9 @@ void loop()
     sd_writer.startDebugging(DEBUG_MODE_NOTECARD_RESET);
     IWatchdog.reload();
     sd_writer.debugSerialPrintln("Reset notecard");
-    //GSM.reset();
-    //GSM.sendMessage("Notecard has been reset.");
-    //GSM.syncMessages(false);
+    GSM.reset();
+    GSM.sendMessage("Notecard has been reset.");
+    GSM.syncMessages(false);
     notecard_reset_start = millis();
     sd_writer.closeDebug();
   }
@@ -85,8 +85,8 @@ void loop()
     sd_writer.startDebugging(DEBUG_MODE_BST_HEARTBEAT);
     IWatchdog.reload();
     sd_writer.debugSerialPrintln("send health msg to notehub");
-    //GSM.sendMessage("BST is up and running");
-    //GSM.syncMessages(false);
+    GSM.sendMessage("BST is up and running");
+    GSM.syncMessages(false);
     health_time_start = millis();
     sd_writer.closeDebug();
   }
@@ -98,15 +98,15 @@ void loop()
           sd_writer.startDebugging(DEBUG_MODE_NOTEHUB_SYNC);
           IWatchdog.reload();
           sd_writer.debugSerialPrintln("Receive measurement frequency:");
-          //GSM.syncMessages(true);
-          //adaptive_frequency_msg = GSM.receiveMeasurementFrequency();
+          GSM.syncMessages(true);
+          adaptive_frequency_msg = GSM.receiveMeasurementFrequency();
           sd_writer.closeDebug();
     }
     if (enable_rescue_from_notehub) 
     {
       sd_writer.startDebugging(DEBUG_MODE_NOTEHUB_SYNC);
       sd_writer.debugSerialPrintln("Receive rescue parameter:");
-      //GSM.syncMessages(true);
+      GSM.syncMessages(true);
       BeaconIncomingMessage beacon_message = GSM.receiveBeaconMessage(rescue_mode, rescue_timeout);
       // only start timing if rescue mode has been enabled now
       if(!rescue_mode && beacon_message.enable_rescue_mode) 
@@ -184,8 +184,8 @@ void loop()
         sd_writer.debugSerialPrintln("Send messages to Notehub");
         BeaconOutgoingMessage *beaconMsg = beaconMessageQueue.front();
         beaconMessageQueue.pop();
-        //GSM.sendBeaconMessage(beaconMsg);
-        //GSM.syncMessages(false);
+        GSM.sendBeaconMessage(beaconMsg);
+        GSM.syncMessages(false);
         delete beaconMsg;
       }
      }
@@ -202,9 +202,9 @@ void loop()
     IWatchdog.reload();
     sd_writer.debugSerialPrintln("handshake enabled");
     buoyInfo buoy = LORA.findBuoy(max_radio_fix_look_time);
-     sd_writer.debugSerialPrintln("still after searching for buoy");
+    sd_writer.debugSerialPrintln("still after searching for buoy");
 
-    // GSM.sendMessage("loop in main");
+    //GSM.sendMessage("loop in main");
     if (buoy.inrange)
     {
       IWatchdog.reload();
@@ -255,7 +255,7 @@ void loop()
           if (LORA.byte_msg.byteMsg[0] == 'G')
           {
             // Receive GPS message
-            // GSM.sendByteMessage(LORA.byte_buoy_msg);
+            //GSM.sendByteMessage(LORA.byte_buoy_msg);
             BuoyMessage *qMsg = new BuoyMessage;
             qMsg->byteMsg = new ByteMessage;
             qMsg->rssi = rssi;
@@ -313,12 +313,19 @@ void loop()
             sd_writer.debugSerialPrint(", timestamp: ");
             sd_writer.debugSerialPrintln(c.timestamp);
           }
-          else if (LORA.byte_msg.byteMsg[0] == 'R')
+          else if (LORA.byte_msg.byteMsg[0] == 'A')
           {
-            turbidity_Reading turbidity_msg = MESSAGE_PARSER.parse_turbidity_message(LORA.byte_msg.byteMsg);
+            analog_Reading analog_msg = MESSAGE_PARSER.parse_analog_message(LORA.byte_msg.byteMsg);
             // Serial.println("turbidity info");
             // Serial.print("voltage: ");
             // Serial.println(turbidity_msg.voltage);
+            BuoyMessage *qMsg = new BuoyMessage;
+            qMsg->byteMsg = new ByteMessage;
+            qMsg->rssi = rssi;
+            qMsg->byteMsg->numBytes = LORA.byte_msg.numBytes;
+            memcpy(qMsg->byteMsg->byteMsg, LORA.byte_msg.byteMsg, LORA.byte_msg.numBytes);
+            messageQueue.push(qMsg);
+
           }
           else if (LORA.byte_msg.byteMsg[0] == 'E' && LORA.byte_msg.byteMsg[1] == 'M')
           {
@@ -342,7 +349,7 @@ void loop()
             // LORA.sendFinalMessage(msg, 14);
             // delay(300);
 
-            // GSM.syncMessages();
+            //GSM.syncMessages();
             break;
           }
           sd_writer.debugSerialPrintln("");
@@ -382,7 +389,7 @@ void loop()
           sd_writer.debugSerialPrintln("SD card failed to open");
         }
 
-        //GSM.sendBuoyMessage(qMsg, buoy_ID);
+        GSM.sendBuoyMessage(qMsg, buoy_ID);
         // delay(100); // Small delay between messages
         IWatchdog.reload();
         delete qMsg->byteMsg;
@@ -390,7 +397,7 @@ void loop()
       }
       // notecard_reset_start = millis();
       IWatchdog.reload();
-      //GSM.syncMessages(false);
+      GSM.syncMessages(false);
       sd_writer.closeLog();
       sd_writer.closeDebug();
       // buoy = LORA.initEmptyBuoy();

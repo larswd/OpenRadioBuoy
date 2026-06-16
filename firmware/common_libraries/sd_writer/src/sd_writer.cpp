@@ -38,7 +38,7 @@ bool SDWriter::begin(void){
 
   SD_fail = !SD.begin(SD_CS_PIN);
  
-  if (!SD_fail && (WIO_MODE == BUOY_MODE)){
+  if (!SD_fail && ((WIO_MODE == BUOY_MODE) || (WIO_MODE == MOORED_MODE))){
     active = true;
 
     // We create the necessary directories if not already present
@@ -113,13 +113,15 @@ int8_t SDWriter::startDebugging(int MODE){
       }
 
       debugFile = SD.open(debugFileName, FILE_WRITE);
-      return 0;
+
     } else if (SD_fail){
       return 1;
     } else {
       return 2;
     }
   }
+  
+  return 0;
 }
 
 

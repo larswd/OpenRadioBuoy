@@ -4,12 +4,13 @@
 
 static constexpr uint8_t BUOY_MODE {0};
 static constexpr uint8_t BST_MODE {1};
+static constexpr uint8_t MOORED_MODE {2};
 
 static constexpr uint8_t WIO_MODE {BST_MODE}; 
 
 // Base station parameters
-static constexpr uint8_t base_station_ID            {25};
-static constexpr int max_message_length             {64};
+static constexpr uint8_t base_station_ID            {102};
+static constexpr int max_message_length             {255};
 
 // SD card parameters
 const int8_t DISABLE_CS_PIN = -1;
@@ -29,9 +30,9 @@ static constexpr float LoRa_freq_receive_max        {867.00};
 
 static constexpr uint8_t num_LoRa_channels          {20};
 static constexpr float LoRa_bw                      {125.0};
-static constexpr int LoRa_sf                        {8};
+static constexpr int LoRa_sf                        {12};
 static constexpr int LoRa_cr                        {6};
-static constexpr int LoRa_power                     {15};
+static constexpr int LoRa_power                     {20};
 static constexpr uint32_t max_radio_fix_look_time   {60000};
 static constexpr uint32_t max_radio_wait_time       {40000};
 static constexpr uint32_t listen_time               {30000};

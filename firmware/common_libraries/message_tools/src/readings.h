@@ -7,6 +7,10 @@
 
 // typedef byte BuoyID[8];
 
+static constexpr uint8_t ANALOG_READING_TYPE_UNKNOWN   {0};
+static constexpr uint8_t ANALOG_READING_TYPE_PH        {1};
+static constexpr uint8_t ANALOG_READING_TYPE_TURBIDITY {2};
+
 struct temperature_Reading
 {
     uint16_t reading_ID;
@@ -33,9 +37,11 @@ struct beacon_Reading
     uint32_t buoy_id;
 };
 
-struct turbidity_Reading
-{
-    uint32_t voltage;
+struct analog_Reading
+{   
+    uint8_t  analogReadingType;
+    uint32_t reading;
+    uint16_t measurementID;
     time_t timestamp;
 };
 

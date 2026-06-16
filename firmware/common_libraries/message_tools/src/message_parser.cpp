@@ -122,11 +122,19 @@ beacon_Reading Message_Parser::parse_beacon_message(byte *msg)
 
 }
 
-turbidity_Reading Message_Parser::parse_turbidity_message(byte* msg)
+analog_Reading Message_Parser::parse_analog_message(byte* msg)
 {
-    turbidity_Reading turbidity_reading_packet;
+    analog_Reading analog_reading_packet;
 
-    int32_t offset = 1;
+    int32_t offset = 0;
+    if ((msg[offset] == 'T') && (msg[offset+1] == 'U')){
+        analog_reading_packet.analogReadingType = ANALOG_READING_TYPE_TURBIDITY;
+    } else if ((msg[offset] == 'P') && (msg[offset+1] == 'H')){
+        analog_reading_packet.analogReadingType = ANALOG_READING_TYPE_PH;
+    } else {
+        analog_reading_packet.analogReadingType = ANALOG_READING_TYPE_UNKNOWN;
+    }
+    offset += 2;
     // uint32_t timestamp = 0;
     // uint64_t fac64 = 1;
     // for (int i = 0; i < 7; i++)
@@ -139,11 +147,12 @@ turbidity_Reading Message_Parser::parse_turbidity_message(byte* msg)
     //     fac64 /= 256;
     //     offset += 1;
     // }
-
-    turbidity_reading_packet.timestamp = msg_extract_uint<time_t>(msg, offset, true);
+    analog_reading_packet.measurementID = msg_extract_uint<uint16_t>(msg, offset, true);
+    offset += sizeof(uint16_t);
+    analog_reading_packet.reading = msg_extract_uint<uint32_t>(msg, offset, true);
+    offset += sizeof(uint32_t);
+    analog_reading_packet.timestamp = msg_extract_uint<time_t>(msg, offset, true);
     offset += sizeof(time_t);
-    turbidity_reading_packet.voltage = msg_extract_uint<uint32_t>(msg, offset, true);
-
     // uint32_t voltage = 0;
     // fac64 = 1;
     // for (int i = 0; i < 3; i++)
@@ -158,7 +167,7 @@ turbidity_Reading Message_Parser::parse_turbidity_message(byte* msg)
     // }
     // turbidity_reading_packet.timestamp = timestamp;
     // turbidity_reading_packet.voltage = voltage;
-    return turbidity_reading_packet;
+    return analog_reading_packet;
 }
 
 // Buoy infor structure is EMxytttteE
