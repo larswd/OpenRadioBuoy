@@ -13,7 +13,7 @@ A single ORB drifter's electronics is made up of the following components, with 
 | Quantity | Component | Note |
 | -------- | --------- | ---- |
 | 1 | [Seeed Studio Wio-E5 mini](https://wiki.seeedstudio.com/LoRa_E5_mini/) | Comes with actory protection which needs to be disabled manually |
-| 1 | [Adafruit Ultimate GPS](https://www.adafruit.com/product/746)          | Comes with a holder for a CR1212 clock battery to remember last fix.| 
+| 1 | [Adafruit Ultimate GPS](https://www.adafruit.com/product/746)          | Comes with a holder for a CR1220 clock battery to remember last fix.| 
 | 1 | [Adafruit SD Breakout](https://www.adafruit.com/product/254)           | | 
 | 1 | [DS18B20 temperature sensor](https://www.sparkfun.com/temperature-sensor-waterproof-ds18b20.html) | |
 | 1 | [Pololu 3.3 V Step up/Step down voltage regulator](https://www.pololu.com/product/2122) | |
@@ -24,7 +24,7 @@ A single ORB drifter's electronics is made up of the following components, with 
 | 1 | [CAB-14574 connector](https://no.mouser.com/ProductDetail/474-CAB-14574) | Not mandatory, but makes arming and disarming the drifter easier |
 | 1 | Strong magnet | To turn off the buoy from outside the buoy container | Not mandatory |
 
-As for battery power, the buoy works with any kind of power source with a voltage between 2.7 and 11.8 V, as per the Pololu documentation. This can be either a Lithium battery such as [Saft LSH20](https://www.nkon.nl/novat/saft-lsh-20-lithium-battery-3-6v.html), although any user should be aware of the [risks of using Lithium powered batteries](https://www.relionbattery.com/blog/the-truth-about-lithium-batteries-and-safety). Alternatively, several alkaline batteries (as was done by the [SFY](https://github.com/gauteh/sfy).) in series can be utilised without need of modifying the circuit. 
+As for battery power, the buoy works with any kind of power source with a voltage between 2.7 and 11.8 V, as per the Pololu documentation. This can be either a Lithium battery such as [Saft LSH20](https://www.nkon.nl/novat/saft-lsh-20-lithium-battery-3-6v.html), although any user should be aware of the [risks of using Lithium powered batteries](https://www.relionbattery.com/blog/the-truth-about-lithium-batteries-and-safety). Alternatively, several alkaline batteries (as was done by the [SFY](https://github.com/gauteh/sfy)) in series can be utilised without need of modifying the circuit. 
 
 
 ### Base station
@@ -50,7 +50,7 @@ To code the WiO E5 mini, remember to order at least one [ST link](https://www.ad
 ## Assembly instructions
 
 ### Electronics assembly - Buoys
-Order the [PCBs](https://github.com/larswd/OpenRadioBuoy/tree/main/hardware/buoy_PCB) by uploading the Gerber files folder to your favourite PCB manufacturer, such as [JLCPCB](https://cart.jlcpcb.com/quote?spm=jlcpcb.Public.2006) or [Seeed studio](https://www.seeedstudio.com/fusion_pcb.html). Then order the components listed above according to how many buoys you plan to make. They can be ordered either from the manufacturer, and in many cases from a local electronics dsitributor. 
+Order the [PCBs](https://github.com/larswd/OpenRadioBuoy/tree/main/hardware/buoy_PCB) by uploading the Gerber files folder to your favourite PCB manufacturer, such as [JLCPCB](https://cart.jlcpcb.com/quote?spm=jlcpcb.Public.2006) or [Seeed studio](https://www.seeedstudio.com/fusion_pcb.html). Then order the components listed above according to how many buoys you plan to make. They can be ordered either from the manufacturer, and in many cases from a local electronics distributor. 
 
 The assembly can begin once you have all the components at hand. The PCBs offered are currently Through-Hole PCBs, and requires therefore manual soldering. As both sides of the PCB is utilized in somewhat overlapping segments, it is vital that some components are soldered before others. I would recommend soldering in this order: 
 
@@ -90,7 +90,7 @@ Afterwards, set ```shared``` to ```Enabled``` and ```Reset mode``` to ```Hardwar
 
 The next step is to upload the firmware. If you are happy with the default configuration, then you can jump to the next paragraph. Otherwise, you can configure most important parameters in the [configuration file](firmware/drifter/src/config.h). What each parameter does is described in the [drifter README file](firmware/drifter/README.md).
 
-Once you have a configuration file you are satisifed with, you can upload the firmware to the buoy. To do so, we use [PlatformIO IDE for vscode](https://docs.platformio.org/en/latest/integration/ide/vscode.html), an extension for visual studio code made for programming microcontrollers. Once you have installed platformIO, click **Open project** under the **PIO Home** tab, and navigate to the *firmware/drifter* folder and click **Open drifter**. From here, platformio will open and read the necessary configurations. Once the project has loaded finished loading, which you can see when several new buttons have appeared at the bottom task bar in visual studio code, then you can upload the code. An image of a fully loaded platformio instance is shown below, in particular note the checkmark and arrow key at the very bottom. 
+Once you have a configuration file you are satisfied with, you can upload the firmware to the buoy. To do so, we use [PlatformIO IDE for vscode](https://docs.platformio.org/en/latest/integration/ide/vscode.html), an extension for visual studio code made for programming microcontrollers. Once you have installed platformIO, click **Open project** under the **PIO Home** tab, and navigate to the *firmware/drifter* folder and click **Open drifter**. From here, platformio will open and read the necessary configurations. Once the project has finished loading, which you can see when several new buttons have appeared at the bottom taskbar in visual studio code, then you can upload the code. An image of a fully loaded platformio instance is shown below, in particular note the checkmark and arrow key at the very bottom. 
 ![](imgs/platformio.png)
 
 To upload the code, connect the ORB to your computer both with the ST link (connection instructions are given above) and the USB C cable, then press the upload button (The arrow icon), then wait until the terminal that popped up states something close to 
@@ -100,7 +100,7 @@ To upload the code, connect the ORB to your computer both with the ST link (conn
 ### Installation instructions - Base station
 The steps for installing the firmware to the base station is more or less the same as the buoy one, with the exception that you instead open the **basestation** project rather than the **drifter** project. Furthermore, you should here remember to go into the ```config.h``` file and set a unique base station ID. See the line where it says:
 static constexpr uint8_t base_station_ID            {x};```
-Where ```x``` is some number. Set ```x``` to any whole number between 0 and 255 that you have not previously used in your base station fleet, then upload the code to the base station. **REMEMBER**: See bullet point 4 of the assembly instructions for the base station regarding data managegement. 
+Where ```x``` is some number. Set ```x``` to any whole number between 0 and 255 that you have not previously used in your base station fleet, then upload the code to the base station. **REMEMBER**: See bullet point 4 of the assembly instructions for the base station regarding data management. 
 
 
 ### Final assembly 
@@ -116,10 +116,10 @@ The container components we used are given in the table below
 | [Large cable gland](https://no.rs-online.com/web/p/cable-glands/6694673) | Cable gland for the antenna |
 | [Small cable gland](https://no.rs-online.com/web/p/cable-glands/6694660) | Cable gland for DS18B20 |
 | [Ballast](https://www.frederiksen-scientific.no/produkt/lodd-med-krok-200-g/191002) | We use 300 grams of tin ballast in each ORB drifter |
-| [XPS 300](https://thaugland.no/butikk/byggevarer/isolasjon/mark-grunn-isolasjon/xps/jackon-isolasjon-xps-20mm-300-jackofoam/) | 20 mm isolation foam as a floation device around the top for increased stability. |
+| [XPS 300](https://thaugland.no/butikk/byggevarer/isolasjon/mark-grunn-isolasjon/xps/jackon-isolasjon-xps-20mm-300-jackofoam/) | 20 mm isolation foam as a flotation device around the top for increased stability. |
 
  
-To assemble, drill two holes in the top lid for the two cable glands. Thereafter, sand the lid to ensure that the top is as uniform as possible. Apply generously with grease on each of the rubber bands on the cable glands and inside the pipes. Insert the fully assembled ORB electronics through the cable glands in the lid. Tighten the antenna gland, but not the thermistor gland, and watch carefully to ensure that the tightening does not loosen the antenna connection to the main circuit board. Insert the bottom lid into the reduction, then place the ballast in the bottom 50 mm diameter pipe, use silicone or other lipophile glue to ensure that it stays put, and add a small cardboard or plastic disc at the top to ensurean even surface. Mark where the magnetic switch is supposed to be placed on the pipe connector with permanent marker, then tape the switch on the other side underneath the marker. Be careful, as improper switch placement means that it is difficult to check if the buoy is turned off while inactive. Cut out a small square or disk of the XPS 300, approximately 15 cm wide at the widest, and cut a 75 mm diameter hole in the middle. Insert the lid into the XPS 300, and then into the pipe connector. Connect the battery to the electronics, and validate that the switch works as intended. Finally, insert the reduction into the connector, and seal the buoy by tightening the thermistor cable gland. 
+To assemble, drill two holes in the top lid for the two cable glands. Thereafter, sand the lid to ensure that the top is as uniform as possible. Apply generously with grease on each of the rubber bands on the cable glands and inside the pipes. Insert the fully assembled ORB electronics through the cable glands in the lid. Tighten the antenna gland, but not the thermistor gland, and watch carefully to ensure that the tightening does not loosen the antenna connection to the main circuit board. Insert the bottom lid into the reduction, then place the ballast in the bottom 50 mm diameter pipe, use silicone or other lipophile glue to ensure that it stays put, and add a small cardboard or plastic disc at the top to ensure an even surface. Mark where the magnetic switch is supposed to be placed on the pipe connector with permanent marker, then tape the switch on the other side underneath the marker. Be careful, as improper switch placement means that it is difficult to check if the buoy is turned off while inactive. Cut out a small square or disk of the XPS 300, approximately 15 cm wide at the widest, and cut a 75 mm diameter hole in the middle. Insert the lid into the XPS 300, and then into the pipe connector. Connect the battery to the electronics, and validate that the switch works as intended. Finally, insert the reduction into the connector, and seal the buoy by tightening the thermistor cable gland. 
 
 
 ![](imgs/assembled_ORB.png)
@@ -127,7 +127,7 @@ Your ORB drifter is now ready to use.
 
 ### Final assembly - Base station
 
-As the base stations will, most likely, not be floating in water directly, there is significantly more leeway in container design. Pick any water proof container large enough, and drill a single hole large enough for the [cable gland](https://no.rs-online.com/web/p/cable-glands/6694673). In our deployments, we used this [fishing box](https://www.clasohlson.com/no/Vanntett-boks-/p/31-8544) which could fit three D Cell batteries and the base station, although it was a bit too cramped. Hence, we recommend finding a slightly larger container if possible. 
+As the base stations will, most likely, not be floating in water directly, there is significantly more leeway in container design. Pick any waterproof container large enough, and drill a single hole large enough for the [cable gland](https://no.rs-online.com/web/p/cable-glands/6694673). In our deployments, we used this [fishing box](https://www.clasohlson.com/no/Vanntett-boks-/p/31-8544) which could fit three D Cell batteries and the base station, although it was a bit too cramped. Hence, we recommend finding a slightly larger container if possible. 
 
 ## Images and deployments
 Images from the deployments will come soon. 
